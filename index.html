@@ -9,7 +9,7 @@
 :root{--gold:#c9a962;--gold-light:#e0c87c;--red:#8b1a2b;--red-dark:#5c0f1c;--bg:#0d0d0d;--card:rgba(255,255,255,0.04);--card-border:rgba(201,169,98,0.15);--text:#e8e0d0;--text-dim:#999;--input-bg:rgba(255,255,255,0.06);--input-border:rgba(201,169,98,0.2)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);color:var(--text);min-height:100vh;background-image:radial-gradient(ellipse at 20% 10%,rgba(139,26,43,0.08) 0%,transparent 60%),radial-gradient(ellipse at 80% 90%,rgba(201,169,98,0.06) 0%,transparent 60%)}
-.container{max-width:960px;margin:0 auto;padding:20px}
+.container{max-width:1000px;margin:0 auto;padding:20px}
 .header{text-align:center;padding:40px 20px 30px;position:relative}
 .header::after{content:'';position:absolute;bottom:0;left:50%;transform:translateX(-50%);width:80px;height:2px;background:linear-gradient(90deg,transparent,var(--gold),transparent)}
 .logo-area{display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:12px}
@@ -22,14 +22,25 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 .card-title .icon{font-size:18px}
 .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
 .form-grid.col3{grid-template-columns:1fr 1fr 1fr}
+.form-grid.col4{grid-template-columns:1fr 1fr 1fr 1fr}
 .form-group{display:flex;flex-direction:column;gap:4px}
 .form-group.full{grid-column:1/-1}
+.form-group.half{grid-column:span 2}
 .form-group label{font-size:12px;color:var(--text-dim);letter-spacing:1px;text-transform:uppercase}
 .form-group label .en{font-size:10px;color:#666;margin-left:6px}
 .form-group input,.form-group select,.form-group textarea{background:var(--input-bg);border:1px solid var(--input-border);border-radius:8px;color:var(--text);padding:10px 14px;font-size:14px;font-family:inherit;outline:none;transition:border-color 0.3s,box-shadow 0.3s}
 .form-group input:focus,.form-group select:focus,.form-group textarea:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,169,98,0.1)}
 .form-group textarea{resize:vertical;min-height:60px}
 .form-group select option{background:#1a1a1a;color:var(--text)}
+.party-type-tabs{display:flex;gap:8px;margin-bottom:16px;padding:4px;background:rgba(255,255,255,0.03);border-radius:10px}
+.party-type-tab{flex:1;padding:10px 16px;text-align:center;border-radius:8px;cursor:pointer;transition:all 0.3s;font-size:13px;border:1px solid transparent}
+.party-type-tab:hover{background:rgba(255,255,255,0.05)}
+.party-type-tab.active{background:rgba(139,26,43,0.3);border-color:rgba(201,169,98,0.3);color:var(--gold-light)}
+.party-type-tab .icon{margin-right:4px}
+.party-fields{display:none}
+.party-fields.active{display:block;animation:fadeIn 0.3s ease}
+@keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
+.section-divider{height:1px;background:rgba(201,169,98,0.1);margin:16px 0}
 .btn-area{text-align:center;padding:10px 0 30px}
 .btn-generate{background:linear-gradient(135deg,var(--red-dark),var(--red));color:var(--gold-light);border:1px solid rgba(201,169,98,0.3);padding:14px 48px;font-size:16px;font-family:inherit;letter-spacing:2px;border-radius:30px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
 .btn-generate:hover{background:linear-gradient(135deg,var(--red),#a01e32);box-shadow:0 4px 20px rgba(139,26,43,0.3);transform:translateY(-1px)}
@@ -51,7 +62,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 .footer{text-align:center;padding:40px;font-size:11px;color:#444;border-top:1px solid rgba(255,255,255,0.04);margin-top:20px}
 .footer a{color:#666;text-decoration:none}
 .footer a:hover{color:var(--gold)}
-@media(max-width:640px){.form-grid,.form-grid.col3{grid-template-columns:1fr}.container{padding:12px}}
+@media(max-width:768px){.form-grid,.form-grid.col3,.form-grid.col4{grid-template-columns:1fr}.form-group.half{grid-column:span 1}.container{padding:12px}}
 </style>
 </head>
 <body>
@@ -68,29 +79,91 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="card-title"><span class="icon">⚖️</span> 案件信息 / Case Info</div>
 <div class="form-grid">
 <div class="form-group"><label>案由 <span class="en">Cause of Action</span></label><input type="text" id="caseType" value="民间借贷纠纷" placeholder="如：民间借贷纠纷"></div>
-<div class="form-group"><label>审级/程序 <span class="en">Stage</span></label><select id="stage"><option value="一审" selected>一审</option><option value="二审">二审</option><option value="执行">执行</option><option value="再审">再审</option></select></div>
+<div class="form-group"><label>审级/程序 <span class="en">Stage</span></label><select id="stage" onchange="updateStageDisplay()"><option value="一审" selected>一审</option><option value="二审">二审</option><option value="执行">执行</option><option value="再审">再审</option></select></div>
 <div class="form-group"><label>标的额（元）<span class="en">Amount</span></label><input type="text" id="amount" value="1570000" placeholder="如：1570000"></div>
 <div class="form-group"><label>管辖法院 <span class="en">Court</span></label><input type="text" id="court" placeholder="如：深圳市福田区人民法院"></div>
-<div class="form-group"><label>案号 <span class="en">Case No.</span></label><input type="text" id="caseNo" placeholder="如：(2026)粤0304民初1234号"></div>
+<div class="form-group full"><label>案号 <span class="en">Case No.</span></label><input type="text" id="caseNo" placeholder="如：(2026)粤0304民初1234号"></div>
 </div>
 </div>
 
-<!-- 甲方 -->
+<!-- 甲方 / 委托人 -->
 <div class="card">
 <div class="card-title"><span class="icon">👤</span> 甲方 / 委托人 <span class="en" style="font-size:12px;color:#999">Client</span></div>
+<div class="party-type-tabs">
+<div class="party-type-tab active" onclick="switchPartyType('client', 'person')" id="tab-client-person"><span class="icon">🧑</span>自然人</div>
+<div class="party-type-tab" onclick="switchPartyType('client', 'company')" id="tab-client-company"><span class="icon">🏢</span>公司/企业</div>
+</div>
+<input type="hidden" id="clientType" value="person">
+
+<!-- 甲方 - 自然人字段 -->
+<div class="party-fields active" id="fields-client-person">
 <div class="form-grid">
-<div class="form-group"><label>姓名 <span class="en">Name</span></label><input type="text" id="clientName" placeholder="如：吴锁春" required></div>
+<div class="form-group"><label>姓名 <span class="en">Name</span></label><input type="text" id="clientName" placeholder="如：吴锁春"></div>
 <div class="form-group"><label>性别 <span class="en">Gender</span></label><select id="clientGender"><option value="男" selected>男</option><option value="女">女</option></select></div>
+<div class="form-group"><label>民族 <span class="en">Ethnicity</span></label><input type="text" id="clientEthnicity" value="汉族" placeholder="如：汉族"></div>
 <div class="form-group"><label>出生日期 <span class="en">D.O.B</span></label><input type="text" id="clientBirth" placeholder="如：1985年3月15日"></div>
-<div class="form-group"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="clientPhone" placeholder="手机号码"></div>
-<div class="form-group full"><label>住址 <span class="en">Address</span></label><input type="text" id="clientAddress" placeholder="详细地址"></div>
+<div class="form-group full"><label>身份证号 <span class="en">ID Number</span></label><input type="text" id="clientIdCard" placeholder="18位身份证号码"></div>
+<div class="form-group full"><label>住址 <span class="en">Address</span></label><input type="text" id="clientAddress" placeholder="详细居住地址"></div>
+<div class="form-group full"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="clientPhone" placeholder="手机号码"></div>
 </div>
 </div>
 
-<!-- 被告 -->
+<!-- 甲方 - 公司字段 -->
+<div class="party-fields" id="fields-client-company">
+<div class="form-grid">
+<div class="form-group full"><label>公司名称 <span class="en">Company Name</span></label><input type="text" id="clientCompanyName" placeholder="如：深圳某某科技有限公司"></div>
+<div class="form-group full"><label>统一社会信用代码 <span class="en">Credit Code</span></label><input type="text" id="clientCreditCode" placeholder="如：91440300XXXXXXXXXX"></div>
+<div class="form-group full"><label>法定代表人 <span class="en">Legal Representative</span></label><input type="text" id="clientLegalRep" placeholder="如：张三"></div>
+<div class="form-group full"><label>公司地址 <span class="en">Company Address</span></label><input type="text" id="clientCompanyAddress" placeholder="公司注册地址或主要经营地址"></div>
+<div class="form-group full"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="clientCompanyPhone" placeholder="公司联系电话"></div>
+</div>
+</div>
+</div>
+
+<!-- 对方当事人 / 被告 -->
 <div class="card">
 <div class="card-title"><span class="icon">👥</span> 对方当事人 / 被告 <span class="en" style="font-size:12px;color:#999">Defendant(s)</span></div>
-<div class="form-grid"><div class="form-group full"><label>名称（多个用顿号分隔）<span class="en">Name(s)</span></label><input type="text" id="defendants" value="刘国强、路洋" required></div></div>
+<div class="party-type-tabs">
+<div class="party-type-tab active" onclick="switchPartyType('opponent', 'person')" id="tab-opponent-person"><span class="icon">🧑</span>自然人</div>
+<div class="party-type-tab" onclick="switchPartyType('opponent', 'company')" id="tab-opponent-company"><span class="icon">🏢</span>公司/企业</div>
+<div class="party-type-tab" onclick="switchPartyType('opponent', 'mixed')" id="tab-opponent-mixed"><span class="icon">👥</span>混合/多个</div>
+</div>
+<input type="hidden" id="opponentType" value="person">
+
+<!-- 对方 - 自然人字段 -->
+<div class="party-fields active" id="fields-opponent-person">
+<div class="form-grid">
+<div class="form-group full"><label>姓名 <span class="en">Name</span></label><input type="text" id="opponentName" value="刘国强" placeholder="如：刘国强"></div>
+<div class="form-group"><label>性别 <span class="en">Gender</span></label><select id="opponentGender"><option value="男" selected>男</option><option value="女">女</option></select></div>
+<div class="form-group"><label>民族 <span class="en">Ethnicity</span></label><input type="text" id="opponentEthnicity" value="汉族" placeholder="如：汉族"></div>
+<div class="form-group"><label>出生日期 <span class="en">D.O.B</span></label><input type="text" id="opponentBirth" placeholder="如：1980年5月20日"></div>
+<div class="form-group full"><label>身份证号 <span class="en">ID Number</span></label><input type="text" id="opponentIdCard" placeholder="18位身份证号码"></div>
+<div class="form-group full"><label>住址 <span class="en">Address</span></label><input type="text" id="opponentAddress" placeholder="详细居住地址"></div>
+<div class="form-group full"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="opponentPhone" placeholder="手机号码"></div>
+</div>
+</div>
+
+<!-- 对方 - 公司字段 -->
+<div class="party-fields" id="fields-opponent-company">
+<div class="form-grid">
+<div class="form-group full"><label>公司名称 <span class="en">Company Name</span></label><input type="text" id="opponentCompanyName" placeholder="如：北京某某商贸有限公司"></div>
+<div class="form-group full"><label>统一社会信用代码 <span class="en">Credit Code</span></label><input type="text" id="opponentCreditCode" placeholder="如：91110108XXXXXXXXXX"></div>
+<div class="form-group full"><label>法定代表人 <span class="en">Legal Representative</span></label><input type="text" id="opponentLegalRep" placeholder="如：李四"></div>
+<div class="form-group full"><label>公司地址 <span class="en">Company Address</span></label><input type="text" id="opponentCompanyAddress" placeholder="公司注册地址或主要经营地址"></div>
+<div class="form-group full"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="opponentCompanyPhone" placeholder="公司联系电话"></div>
+</div>
+</div>
+
+<!-- 对方 - 混合/多个 -->
+<div class="party-fields" id="fields-opponent-mixed">
+<div class="form-group full" style="margin-bottom:12px;">
+<label>对方当事人列表（多个用顿号、分隔）<span class="en">Defendant Names</span></label>
+<input type="text" id="opponentMixedNames" value="刘国强、路洋" placeholder="如：刘国强、路洋、某某公司">
+</div>
+<div style="font-size:12px;color:var(--text-dim);padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;">
+💡 <strong>提示：</strong>混合模式仅填写名称列表，详细信息请在生成后手动补充到文书中。
+</div>
+</div>
 </div>
 
 <!-- 费用 -->
@@ -99,19 +172,32 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="form-grid">
 <div class="form-group"><label>收费方式 <span class="en">Fee Type</span></label>
 <select id="feeType" onchange="toggleFeeFields()">
-<option value="hybrid" selected>固定 + 风险代理</option>
+<option value="hybrid" selected>固定 + 风险代理（混合）</option>
 <option value="fixed">纯固定收费</option>
 <option value="risk">纯风险代理</option>
 </select></div>
-<div class="form-group" id="fixedFeeGroup"><label>固定律师费（元）<span class="en">Fixed Fee</span></label><input type="text" id="feeFixed" value="24000"></div>
-<div class="form-group" id="riskFeeGroup"><label>风险代理比例 <span class="en">Risk Rate</span></label><input type="text" id="feeRisk" value="3%"></div>
+<div class="form-group" id="fixedFeeGroup"><label>固定律师费（元）<span class="en">Fixed Fee</span></label><input type="text" id="feeFixed" value="24000" placeholder="如：24000"></div>
+<div class="form-group" id="riskFeeGroup"><label>风险代理比例 <span class="en">Risk Rate</span></label><input type="text" id="feeRisk" value="3%" placeholder="如：3%、5%等"></div>
+</div>
+<div class="section-divider"></div>
+<div style="font-size:12px;color:var(--text-dim);padding:8px;background:rgba(201,169,98,0.05);border-radius:8px;">
+<strong style="color:var(--gold);">收费说明：</strong><br>
+<span id="feeDesc">固定+风险代理：基础费用+回款提成</span>
 </div>
 </div>
 
 <!-- 代理权限 -->
 <div class="card">
 <div class="card-title"><span class="icon">📋</span> 代理权限 / Authorization</div>
-<div class="form-grid"><div class="form-group full"><label>委托书选项 <span class="en">Option</span></label><select id="authOption"><option value="A">A 一般代理</option><option value="B" selected>B 特别授权</option><option value="C">C 执行代理</option><option value="D">D 其他</option></select></div></div>
+<div class="form-grid">
+<div class="form-group full"><label>委托书选项 <span class="en">Power of Attorney Option</span></label>
+<select id="authOption">
+<option value="A">A 一般代理（程序性权利）</option>
+<option value="B" selected>B 特别授权（含实体处分权）</option>
+<option value="C">C 执行阶段代理</option>
+<option value="D">D 其他约定</option>
+</select></div>
+</div>
 </div>
 
 <div class="btn-area">
@@ -127,7 +213,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 </div>
 
 <div class="footer">
-中银-力图-赵陈黄（横琴·深圳）联营律师事务所 · 法律文书生成引擎 v2.0<br>
+中银-力图-赵陈黄（横琴·深圳）联营律师事务所 · 法律文书生成引擎 v3.0<br>
 <a href="https://github.com/Seascat/legal-doc-generator" target="_blank">GitHub</a> &nbsp;|&nbsp; 所有数据处理均在浏览器本地完成，不上传任何信息
 </div>
 
@@ -135,12 +221,115 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 
 <script>
 // ═══════════════════════════════════════════
+// 当事人类型切换
+// ═══════════════════════════════════════════
+function switchPartyType(party, type) {
+  // 更新隐藏字段
+  document.getElementById(party + 'Type').value = type;
+  
+  // 更新标签样式
+  const tabs = ['person', 'company', 'mixed'];
+  tabs.forEach(t => {
+    const tab = document.getElementById('tab-' + party + '-' + t);
+    const fields = document.getElementById('fields-' + party + '-' + t);
+    if (tab && fields) {
+      if (t === type) {
+        tab.classList.add('active');
+        fields.classList.add('active');
+      } else {
+        tab.classList.remove('active');
+        fields.classList.remove('active');
+      }
+    }
+  });
+}
+
+// ═══════════════════════════════════════════
 // 费用字段联动
 // ═══════════════════════════════════════════
 function toggleFeeFields() {
   const type = document.getElementById('feeType').value;
-  document.getElementById('fixedFeeGroup').style.display = (type === 'risk') ? 'none' : '';
-  document.getElementById('riskFeeGroup').style.display = (type === 'fixed') ? 'none' : '';
+  const fixedGroup = document.getElementById('fixedFeeGroup');
+  const riskGroup = document.getElementById('riskFeeGroup');
+  const feeDesc = document.getElementById('feeDesc');
+  
+  if (type === 'fixed') {
+    fixedGroup.style.display = '';
+    riskGroup.style.display = 'none';
+    feeDesc.textContent = '纯固定收费：按约定金额一次性/分期支付';
+  } else if (type === 'risk') {
+    fixedGroup.style.display = 'none';
+    riskGroup.style.display = '';
+    feeDesc.textContent = '纯风险代理：无前期费用，按回款比例收取';
+  } else {
+    fixedGroup.style.display = '';
+    riskGroup.style.display = '';
+    feeDesc.textContent = '固定+风险代理：基础费用+回款提成';
+  }
+}
+
+// ═══════════════════════════════════════════
+// 审级显示更新
+// ═══════════════════════════════════════════
+function updateStageDisplay() {
+  // 可根据审级调整其他显示
+}
+
+// ═══════════════════════════════════════════
+// 获取当事方完整信息
+// ═══════════════════════════════════════════
+function getPartyInfo(party) {
+  const type = document.getElementById(party + 'Type').value;
+  
+  if (type === 'person') {
+    return {
+      type: 'person',
+      isPerson: true,
+      isCompany: false,
+      name: document.getElementById(party + 'Name')?.value?.trim() || '',
+      gender: document.getElementById(party + 'Gender')?.value || '',
+      ethnicity: document.getElementById(party + 'Ethnicity')?.value?.trim() || '',
+      birth: document.getElementById(party + 'Birth')?.value?.trim() || '',
+      idCard: document.getElementById(party + 'IdCard')?.value?.trim() || '',
+      address: document.getElementById(party + 'Address')?.value?.trim() || '',
+      phone: document.getElementById(party + 'Phone')?.value?.trim() || '',
+      // 公司字段留空
+      companyName: '',
+      creditCode: '',
+      legalRep: '',
+      companyAddress: '',
+      companyPhone: ''
+    };
+  } else if (type === 'company') {
+    return {
+      type: 'company',
+      isPerson: false,
+      isCompany: true,
+      name: document.getElementById(party + 'CompanyName')?.value?.trim() || '',
+      companyName: document.getElementById(party + 'CompanyName')?.value?.trim() || '',
+      creditCode: document.getElementById(party + 'CreditCode')?.value?.trim() || '',
+      legalRep: document.getElementById(party + 'LegalRep')?.value?.trim() || '',
+      companyAddress: document.getElementById(party + 'CompanyAddress')?.value?.trim() || '',
+      phone: document.getElementById(party + 'CompanyPhone')?.value?.trim() || '',
+      companyPhone: document.getElementById(party + 'CompanyPhone')?.value?.trim() || '',
+      // 自然人字段留空
+      gender: '',
+      ethnicity: '',
+      birth: '',
+      idCard: '',
+      address: document.getElementById(party + 'CompanyAddress')?.value?.trim() || ''
+    };
+  } else if (type === 'mixed') {
+    const mixedNames = document.getElementById(party + 'MixedNames')?.value?.trim() || '';
+    return {
+      type: 'mixed',
+      isPerson: false,
+      isCompany: false,
+      isMixed: true,
+      name: mixedNames,
+      mixedNames: mixedNames
+    };
+  }
 }
 
 // ═══════════════════════════════════════════
@@ -162,10 +351,9 @@ const FIRM = {
 };
 
 // ═══════════════════════════════════════════
-// XML 替换引擎（纯 JS 版本）
+// XML 替换引擎
 // ═══════════════════════════════════════════
 function replaceXmlString(xml, replacements) {
-  // 简单字符串替换
   for (const [oldStr, newStr] of replacements) {
     if (xml.includes(oldStr)) {
       xml = xml.replaceAll(oldStr, newStr);
@@ -174,50 +362,26 @@ function replaceXmlString(xml, replacements) {
   return xml;
 }
 
-// 定位含特定文本的 w:t 节点并替换
-function replaceTagText(xml, targetText, newText) {
-  // 匹配: <w:t ...>targetText</w:t>
-  const re = new RegExp(
-    '(<w:t[^>]*>)' +
-    targetText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') +
-    '(</w:t>)',
-    'g'
-  );
-  let found = false;
-  const result = xml.replace(re, (match, openTag, closeTag) => {
-    if (found) return match;
-    found = true;
-    return openTag + newText + closeTag;
-  });
-  return result;
-}
-
 // ═══════════════════════════════════════════
 // 生成单份文书
 // ═══════════════════════════════════════════
 async function generateOne(templateUrl, replacements, authOpt, filename) {
-  // 加载模板
   const resp = await fetch(templateUrl);
   if (!resp.ok) throw new Error('模板加载失败: ' + templateUrl);
   const blob = await resp.blob();
 
-  // 解压
   const zip = await JSZip.loadAsync(blob);
   let xml = await zip.file('word/document.xml').async('string');
 
-  // 替换
   xml = replaceXmlString(xml, replacements);
 
   // 授权书特殊处理: C → authOpt
   if (authOpt && authOpt !== 'C') {
-    // 找到独立的 <w:t>C</w:t>（在「第...项」上下文中的那个）
-    // 策略: 替换第一个在 "第" 和 "项" 之间出现的独立 w:t C 节点
     const re = /第[^<]*(?:<[^>]*>)*\s*<w:t[^>]*>\s*C\s*<\/w:t>\s*(?:<[^>]*>)*\s*项/;
     if (re.test(xml)) {
       xml = xml.replace(
         /(<w:t[^>]*>)\s*C\s*(<\/w:t>)/,
         function(match, open, close, offset) {
-          // 确保这个 C 在 "第" 和 "项" 之间
           const before = xml.substring(Math.max(0, offset - 80), offset);
           const after = xml.substring(offset + match.length, offset + match.length + 20);
           if (before.includes('第') && after.includes('项')) {
@@ -229,7 +393,6 @@ async function generateOne(templateUrl, replacements, authOpt, filename) {
     }
   }
 
-  // 重新打包
   zip.file('word/document.xml', xml);
   const newBlob = await zip.generateAsync({
     type: 'blob',
@@ -237,7 +400,6 @@ async function generateOne(templateUrl, replacements, authOpt, filename) {
     compression: 'DEFLATE',
   });
 
-  // 下载
   const url = URL.createObjectURL(newBlob);
   const a = document.createElement('a');
   a.href = url;
@@ -257,14 +419,12 @@ async function doGenerate() {
   const resultArea = document.getElementById('resultArea');
   const resultContent = document.getElementById('resultContent');
 
-  // 收集数据
-  const data = {
-    client: document.getElementById('clientName').value.trim(),
-    gender: document.getElementById('clientGender').value,
-    birth: document.getElementById('clientBirth').value.trim(),
-    phone: document.getElementById('clientPhone').value.trim(),
-    addr: document.getElementById('clientAddress').value.trim(),
-    defendants: document.getElementById('defendants').value.trim(),
+  // 获取双方信息
+  const client = getPartyInfo('client');
+  const opponent = getPartyInfo('opponent');
+
+  // 案件信息
+  const caseData = {
     caseType: document.getElementById('caseType').value.trim(),
     stage: document.getElementById('stage').value,
     amount: document.getElementById('amount').value.trim(),
@@ -276,8 +436,19 @@ async function doGenerate() {
     authOption: document.getElementById('authOption').value,
   };
 
-  if (!data.client || !data.defendants || !data.caseType) {
-    resultContent.innerHTML = '<div class="error-msg">⚠️ 请填写甲方姓名、对方当事人和案由</div>';
+  // 验证
+  if (!client.name) {
+    resultContent.innerHTML = '<div class="error-msg">⚠️ 请填写甲方（委托人）信息</div>';
+    resultArea.classList.add('show');
+    return;
+  }
+  if (!opponent.name) {
+    resultContent.innerHTML = '<div class="error-msg">⚠️ 请填写对方当事人信息</div>';
+    resultArea.classList.add('show');
+    return;
+  }
+  if (!caseData.caseType) {
+    resultContent.innerHTML = '<div class="error-msg">⚠️ 请填写案由</div>';
     resultArea.classList.add('show');
     return;
   }
@@ -290,71 +461,126 @@ async function doGenerate() {
   resultArea.classList.add('show');
   resultContent.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px;">⏳ 正在浏览器中生成文书，请稍候...</div>';
 
-  // 计算律师费条款
+  // 计算程序名称（根据审级）
+  const stageMap = {
+    '一审': '一审程序',
+    '二审': '二审程序', 
+    '执行': '执行程序',
+    '再审': '再审程序'
+  };
+  const stageName = stageMap[caseData.stage] || caseData.stage + '程序';
+
+  // 计算律师费条款 - 合同第六条
   let feeClauseNew = '';
   const feeClauseOld = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案执行程序采取风险代理的收费方式，律师服务费为{{实际回款金额}}的3%收取。甲方应在收到实际执行回款后7日内将律师费全额一次性付给乙方。';
-  const stageName = data.stage + '程序';
 
-  if (data.feeType === 'hybrid') {
+  if (caseData.feeType === 'hybrid') {
     feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取"固定收费＋风险代理"的收费方式：'
-      + '1. 基础律师服务费为人民币' + (data.feeFixed || '0') + '元，甲方应于本合同签订之日起三日内一次性付清。'
-      + '2. 风险代理费按甲方实际收回金额的' + (data.feeRisk || '3%') + '收取，甲方应在收到每笔回款后7日内将风险代理费全额一次性付给乙方。';
-  } else if (data.feeType === 'fixed') {
-    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取固定收费的收费方式，律师服务费为人民币' + (data.feeFixed || '0') + '元。甲方应于本合同签订之日起三日内一次性付清。';
+      + '1. 基础律师服务费为人民币' + (caseData.feeFixed || '0') + '元，甲方应于本合同签订之日起三日内一次性付清。'
+      + '2. 风险代理费按甲方实际收回金额的' + (caseData.feeRisk || '3%') + '收取，甲方应在收到每笔回款后7日内将风险代理费全额一次性付给乙方。';
+  } else if (caseData.feeType === 'fixed') {
+    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取固定收费的收费方式，律师服务费为人民币' + (caseData.feeFixed || '0') + '元。甲方应于本合同签订之日起三日内一次性付清。';
   } else {
-    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取风险代理的收费方式，律师服务费按甲方实际收回金额的' + (data.feeRisk || '3%') + '收取。甲方应在收到每笔回款后7日内将律师费全额一次性付给乙方。';
+    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取风险代理的收费方式，律师服务费按甲方实际收回金额的' + (caseData.feeRisk || '3%') + '收取。甲方应在收到每笔回款后7日内将律师费全额一次性付给乙方。';
   }
 
-  const files = [
-    { tmpl: TEMPLATES.contract, name: `1. 民事委托代理合同-${data.client}-${data.caseType}.docx`,
-      reps: [
-        // 费用条款必须放最前面替换（原文含占位符）
-        [feeClauseOld, feeClauseNew],
-        ['{{甲方姓名}}', data.client],
-        ['{{对方当事人}}', data.defendants],
-        ['{{案由}}', data.caseType],
-        ['{{标的额}}', data.amount],
-        ['{{审级}}', data.stage],
-        ['{{管辖法院}}', data.court],
-        ['刘国强、路洋', data.defendants],
-        ['执行程序', stageName],
-        ['{{实际回款金额}}', data.amount],
-      ],
-      authOption: null },
+  // 构建甲方信息字符串（用于合同显示）
+  let clientInfoStr = '';
+  let clientShortName = '';
+  if (client.isPerson) {
+    clientInfoStr = client.name;
+    clientShortName = client.name;
+  } else if (client.isCompany) {
+    clientInfoStr = client.companyName;
+    clientShortName = client.companyName;
+  }
 
-    { tmpl: TEMPLATES.auth, name: `2. 授权委托书-${data.client}-${data.caseType}.docx`,
+  // 构建对方信息字符串
+  let opponentInfoStr = '';
+  if (opponent.isPerson) {
+    opponentInfoStr = opponent.name;
+  } else if (opponent.isCompany) {
+    opponentInfoStr = opponent.companyName;
+  } else if (opponent.isMixed) {
+    opponentInfoStr = opponent.mixedNames;
+  }
+
+  // 准备替换数据
+  const files = [
+    { 
+      tmpl: TEMPLATES.contract, 
+      name: `1. 民事委托代理合同-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
-        ['{{甲方姓名}}', data.client],
-        ['{{甲方出生日期}}', data.birth],
-        ['{{甲方住址}}', data.addr],
-        ['{{甲方联系电话}}', data.phone],
-        ['{{对方当事人}}{{案由}}', data.defendants + data.caseType],
-        ['{{审级}}程序', data.stage + '程序'],
-        ['{{审级}}', data.stage],
+        // 费用条款
+        [feeClauseOld, feeClauseNew],
+        // 当事方信息
+        ['{{甲方姓名}}', client.isPerson ? client.name : client.companyName],
+        ['{{对方当事人}}', opponentInfoStr],
+        ['{{案由}}', caseData.caseType],
+        ['{{标的额}}', caseData.amount],
+        ['{{审级}}', caseData.stage],
+        ['{{管辖法院}}', caseData.court],
+        ['{{甲方身份证号}}', client.isPerson ? client.idCard : client.creditCode],
+        ['{{甲方法定代表人}}', client.isPerson ? client.name : client.legalRep],
+        ['{{对方身份证号}}', opponent.isPerson ? opponent.idCard : opponent.creditCode || ''],
+        ['{{对方公司代码}}', opponent.isCompany ? opponent.creditCode : ''],
+        ['{{对方公司法人}}', opponent.isCompany ? opponent.legalRep : ''],
+        // 兼容旧模板
+        ['刘国强、路洋', opponentInfoStr],
+        ['执行程序', stageName],
+        ['{{实际回款金额}}', caseData.amount],
+      ],
+      authOption: null 
+    },
+
+    { 
+      tmpl: TEMPLATES.auth, 
+      name: `2. 授权委托书-${clientShortName}-${caseData.caseType}.docx`,
+      reps: [
+        ['{{甲方姓名}}', client.isPerson ? client.name : client.legalRep],
+        ['{{甲方公司名称}}', client.isCompany ? client.companyName : ''],
+        ['{{甲方公司代码}}', client.isCompany ? client.creditCode : ''],
+        ['{{甲方法定代表人}}', client.isCompany ? client.legalRep : ''],
+        ['{{甲方出生日期}}', client.birth || ''],
+        ['{{甲方住址}}', client.address || ''],
+        ['{{甲方联系电话}}', client.phone || ''],
+        ['{{对方当事人}}', opponentInfoStr],
+        ['{{案由}}', caseData.caseType],
+        ['{{审级}}程序', stageName],
+        ['{{审级}}', caseData.stage],
         ['{{期限选项}}', 'A'],
       ],
-      authOption: data.authOption },
+      authOption: caseData.authOption 
+    },
 
-    { tmpl: TEMPLATES.letter, name: `3. 律师事务所函-${data.client}-${data.caseType}.docx`,
+    { 
+      tmpl: TEMPLATES.letter, 
+      name: `3. 律师事务所函-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
-        ['{{甲方姓名}}', data.client],
-        ['{{对方当事人}}', data.defendants],
-        ['{{案由}}', data.caseType],
-        ['{{审级}}程序', data.stage + '程序'],
-        ['{{审级}}', data.stage],
-        ['{{管辖法院}}', data.court],
+        ['{{甲方姓名}}', client.isPerson ? client.name : client.legalRep],
+        ['{{甲方公司名称}}', client.isCompany ? client.companyName : ''],
+        ['{{对方当事人}}', opponentInfoStr],
+        ['{{案由}}', caseData.caseType],
+        ['{{审级}}程序', stageName],
+        ['{{审级}}', caseData.stage],
+        ['{{管辖法院}}', caseData.court],
         ['{{律师电话}}', FIRM.lawyerPhone],
-        ['刘国强、路洋', data.defendants],
-        ['民间借贷纠纷', data.caseType],
+        ['刘国强、路洋', opponentInfoStr],
+        ['民间借贷纠纷', caseData.caseType],
       ],
-      authOption: null },
+      authOption: null 
+    },
 
-    { tmpl: TEMPLATES.evidence, name: `4. 证据目录-${data.client}-${data.caseType}.docx`,
+    { 
+      tmpl: TEMPLATES.evidence, 
+      name: `4. 证据目录-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
-        ['{{甲方姓名}}', data.client],
-        ['路洋', data.defendants],
+        ['{{甲方姓名}}', client.isPerson ? client.name : client.companyName],
+        ['{{对方当事人}}', opponentInfoStr],
+        ['路洋', opponentInfoStr],
       ],
-      authOption: null },
+      authOption: null 
+    },
   ];
 
   try {
@@ -371,7 +597,6 @@ async function doGenerate() {
 
       await generateOne(files[i].tmpl, files[i].reps, files[i].authOption, files[i].name);
 
-      // 小延迟让浏览器有时间触发下载
       await new Promise(r => setTimeout(r, 300));
     }
 
@@ -379,10 +604,10 @@ async function doGenerate() {
     resultContent.innerHTML = `<div style="text-align:center;padding:20px;">
       <div style="font-weight:bold;color:var(--gold);margin-bottom:12px;font-size:18px;">✅ 生成完成！4 份文书已自动下载</div>
       <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">
-        1. 民事委托代理合同-${data.client}-${data.caseType}.docx<br>
-        2. 授权委托书-${data.client}-${data.caseType}.docx<br>
-        3. 律师事务所函-${data.client}-${data.caseType}.docx<br>
-        4. 证据目录-${data.client}-${data.caseType}.docx
+        1. 民事委托代理合同-${clientShortName}-${caseData.caseType}.docx<br>
+        2. 授权委托书-${clientShortName}-${caseData.caseType}.docx<br>
+        3. 律师事务所函-${clientShortName}-${caseData.caseType}.docx<br>
+        4. 证据目录-${clientShortName}-${caseData.caseType}.docx
       </div>
       <div style="font-size:11px;color:#555;">
         ⚠️ 请检查下载文件夹。所有数据处理均在浏览器本地完成，未上传任何信息。<br>
@@ -397,6 +622,7 @@ async function doGenerate() {
     setTimeout(() => { progressBar.style.display = 'none'; }, 1000);
   }
 }
+
 // 初始化
 toggleFeeFields();
 </script>
