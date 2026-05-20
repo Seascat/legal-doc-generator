@@ -173,9 +173,9 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="form-grid">
 <div class="form-group"><label>收费方式 <span class="en">Fee Type</span></label>
 <select id="feeType" onchange="toggleFeeFields()">
-<option value="hybrid" selected>固定 + 风险代理（混合）</option>
-<option value="fixed">纯固定收费</option>
-<option value="risk">纯风险代理</option>
+<option value="fixed">固定收费</option>
+<option value="risk">风险代理</option>
+<option value="hybrid" selected>固定收费+风险代理（相结合）</option>
 </select></div>
 <div class="form-group" id="fixedFeeGroup"><label>固定律师费（元）<span class="en">Fixed Fee</span></label><input type="text" id="feeFixed" value="24000" placeholder="如：24000"></div>
 <div class="form-group" id="riskFeeGroup"><label>风险代理比例 <span class="en">Risk Rate</span></label><input type="text" id="feeRisk" value="3%" placeholder="如：3%、5%等"></div>
@@ -183,7 +183,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="section-divider"></div>
 <div style="font-size:12px;color:var(--text-dim);padding:8px;background:rgba(201,169,98,0.05);border-radius:8px;">
 <strong style="color:var(--gold);">收费说明：</strong><br>
-<span id="feeDesc">固定+风险代理：基础费用+回款提成</span>
+<span id="feeDesc">固定+风险代理相结合：固定基础费 + 按回款比例的风险费</span>
 </div>
 </div>
 
@@ -270,15 +270,15 @@ function toggleFeeFields() {
   if (type === 'fixed') {
     fixedGroup.style.display = '';
     riskGroup.style.display = 'none';
-    feeDesc.textContent = '纯固定收费：按约定金额一次性/分期支付';
+    feeDesc.textContent = '固定收费：按约定总额一次性收取，无论案件结果均不退还';
   } else if (type === 'risk') {
     fixedGroup.style.display = 'none';
     riskGroup.style.display = '';
-    feeDesc.textContent = '纯风险代理：无前期费用，按回款比例收取';
+    feeDesc.textContent = '风险代理：无基础费用，按实际收到执行回款金额的比例收取';
   } else {
     fixedGroup.style.display = '';
     riskGroup.style.display = '';
-    feeDesc.textContent = '固定+风险代理：基础费用+回款提成';
+    feeDesc.textContent = '固定+风险代理相结合：固定基础费 + 按回款比例的风险费';
   }
 }
 
@@ -491,14 +491,14 @@ async function doGenerate() {
   let feeClauseNew = '';
   const feeClauseOld = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案执行程序采取风险代理的收费方式，律师服务费为{{实际回款金额}}的3%收取。甲方应在收到实际执行回款后7日内将律师费全额一次性付给乙方。';
 
-  if (caseData.feeType === 'hybrid') {
-    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取"固定收费＋风险代理"的收费方式：'
-      + '1. 基础律师服务费为人民币' + (caseData.feeFixed || '0') + '元，甲方应于本合同签订之日起三日内一次性付清。'
-      + '2. 风险代理费按甲方实际收回金额的' + (caseData.feeRisk || '3%') + '收取，甲方应在收到每笔回款后7日内将风险代理费全额一次性付给乙方。';
-  } else if (caseData.feeType === 'fixed') {
-    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取固定收费的收费方式，律师服务费为人民币' + (caseData.feeFixed || '0') + '元。甲方应于本合同签订之日起三日内一次性付清。';
+  if (caseData.feeType === 'fixed') {
+    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取固定收费方式。律师服务费总额为人民币' + (caseData.feeFixed || '______') + '元收取。';
+  } else if (caseData.feeType === 'risk') {
+    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取风险代理收费方式。律师服务费按甲方实际收到执行回款金额的' + (caseData.feeRisk || '______%') + '收取。';
   } else {
-    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取风险代理的收费方式，律师服务费按甲方实际收回金额的' + (caseData.feeRisk || '3%') + '收取。甲方应在收到每笔回款后7日内将律师费全额一次性付给乙方。';
+    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取‘固定收费+风险代理’相结合的方式。\n\n'
+      + '固定部分：甲方应于本协议签订之日向乙方支付基础律师费人民币' + (caseData.feeFixed || '______') + '元。该费用为固定费用，无论案件结果如何，均不予退还。\n\n'
+      + '风险部分：甲方应按其实际收到执行回款金额的' + (caseData.feeRisk || '______%（建议填写小于3%的比例，如1%-2%）') + '向乙方支付风险代理律师费。甲方应在收到实际执行回款后7日内将律师费全额一次性付给乙方。';
   }
 
   // 构建甲方信息字符串（用于合同显示）
