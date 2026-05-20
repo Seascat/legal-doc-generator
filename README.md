@@ -6,7 +6,7 @@
 
 ## 立即使用
 
-👉 **[打开网页生成](https://Neededxylitol.github.io/legal-doc-generator/)**
+👉 **[打开网页生成](https://seascat.github.io/legal-doc-generator/)**
 
 ## 生成的文书
 

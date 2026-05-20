@@ -97,8 +97,14 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="card">
 <div class="card-title"><span class="icon">💰</span> 律师费 / Legal Fees</div>
 <div class="form-grid">
-<div class="form-group"><label>固定律师费（元）<span class="en">Fixed Fee</span></label><input type="text" id="feeFixed" value="24000"></div>
-<div class="form-group"><label>风险代理比例 <span class="en">Risk Rate</span></label><input type="text" id="feeRisk" value="3%"></div>
+<div class="form-group"><label>收费方式 <span class="en">Fee Type</span></label>
+<select id="feeType" onchange="toggleFeeFields()">
+<option value="hybrid" selected>固定 + 风险代理</option>
+<option value="fixed">纯固定收费</option>
+<option value="risk">纯风险代理</option>
+</select></div>
+<div class="form-group" id="fixedFeeGroup"><label>固定律师费（元）<span class="en">Fixed Fee</span></label><input type="text" id="feeFixed" value="24000"></div>
+<div class="form-group" id="riskFeeGroup"><label>风险代理比例 <span class="en">Risk Rate</span></label><input type="text" id="feeRisk" value="3%"></div>
 </div>
 </div>
 
@@ -122,12 +128,21 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 
 <div class="footer">
 中银-力图-赵陈黄（横琴·深圳）联营律师事务所 · 法律文书生成引擎 v2.0<br>
-<a href="https://github.com/Neededxylitol/legal-doc-generator" target="_blank">GitHub</a> &nbsp;|&nbsp; 所有数据处理均在浏览器本地完成，不上传任何信息
+<a href="https://github.com/Seascat/legal-doc-generator" target="_blank">GitHub</a> &nbsp;|&nbsp; 所有数据处理均在浏览器本地完成，不上传任何信息
 </div>
 
 </div>
 
 <script>
+// ═══════════════════════════════════════════
+// 费用字段联动
+// ═══════════════════════════════════════════
+function toggleFeeFields() {
+  const type = document.getElementById('feeType').value;
+  document.getElementById('fixedFeeGroup').style.display = (type === 'risk') ? 'none' : '';
+  document.getElementById('riskFeeGroup').style.display = (type === 'fixed') ? 'none' : '';
+}
+
 // ═══════════════════════════════════════════
 // 模板文件名映射
 // ═══════════════════════════════════════════
@@ -255,6 +270,7 @@ async function doGenerate() {
     amount: document.getElementById('amount').value.trim(),
     court: document.getElementById('court').value.trim() || '____________人民法院',
     caseNo: document.getElementById('caseNo').value.trim() || '____________号',
+    feeType: document.getElementById('feeType').value,
     feeFixed: document.getElementById('feeFixed').value.trim(),
     feeRisk: document.getElementById('feeRisk').value.trim(),
     authOption: document.getElementById('authOption').value,
@@ -274,9 +290,26 @@ async function doGenerate() {
   resultArea.classList.add('show');
   resultContent.innerHTML = '<div style="text-align:center;color:var(--text-dim);padding:20px;">⏳ 正在浏览器中生成文书，请稍候...</div>';
 
+  // 计算律师费条款
+  let feeClauseNew = '';
+  const feeClauseOld = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案执行程序采取风险代理的收费方式，律师服务费为{{实际回款金额}}的3%收取。甲方应在收到实际执行回款后7日内将律师费全额一次性付给乙方。';
+  const stageName = data.stage + '程序';
+
+  if (data.feeType === 'hybrid') {
+    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取"固定收费＋风险代理"的收费方式：'
+      + '1. 基础律师服务费为人民币' + (data.feeFixed || '0') + '元，甲方应于本合同签订之日起三日内一次性付清。'
+      + '2. 风险代理费按甲方实际收回金额的' + (data.feeRisk || '3%') + '收取，甲方应在收到每笔回款后7日内将风险代理费全额一次性付给乙方。';
+  } else if (data.feeType === 'fixed') {
+    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取固定收费的收费方式，律师服务费为人民币' + (data.feeFixed || '0') + '元。甲方应于本合同签订之日起三日内一次性付清。';
+  } else {
+    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取风险代理的收费方式，律师服务费按甲方实际收回金额的' + (data.feeRisk || '3%') + '收取。甲方应在收到每笔回款后7日内将律师费全额一次性付给乙方。';
+  }
+
   const files = [
     { tmpl: TEMPLATES.contract, name: `1. 民事委托代理合同-${data.client}-${data.caseType}.docx`,
       reps: [
+        // 费用条款必须放最前面替换（原文含占位符）
+        [feeClauseOld, feeClauseNew],
         ['{{甲方姓名}}', data.client],
         ['{{对方当事人}}', data.defendants],
         ['{{案由}}', data.caseType],
@@ -284,7 +317,7 @@ async function doGenerate() {
         ['{{审级}}', data.stage],
         ['{{管辖法院}}', data.court],
         ['刘国强、路洋', data.defendants],
-        ['执行程序', data.stage === '执行' ? '执行程序' : data.stage + '程序'],
+        ['执行程序', stageName],
         ['{{实际回款金额}}', data.amount],
       ],
       authOption: null },
@@ -364,6 +397,8 @@ async function doGenerate() {
     setTimeout(() => { progressBar.style.display = 'none'; }, 1000);
   }
 }
+// 初始化
+toggleFeeFields();
 </script>
 </body>
 </html>
