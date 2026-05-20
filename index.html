@@ -375,6 +375,15 @@ async function generateOne(templateUrl, replacements, authOpt, filename) {
   const zip = await JSZip.loadAsync(blob);
   let xml = await zip.file('word/document.xml').async('string');
 
+  // 执行所有占位符替换
+  for (const [oldStr, newStr] of replacements) {
+    if (!oldStr) continue;
+    // 使用正则全局替换，处理特殊字符
+    const escaped = oldStr.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(escaped, 'g');
+    xml = xml.replace(regex, newStr || '');
+  }
+
   // 授权书特殊处理: C → authOpt
   if (authOpt && authOpt !== 'C') {
     const re = /第[^<]*(?:<[^>]*>)*\s*<w:t[^>]*>\s*C\s*<\/w:t>\s*(?:<[^>]*>)*\s*项/;
