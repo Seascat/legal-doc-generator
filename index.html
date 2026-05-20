@@ -80,6 +80,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="form-grid">
 <div class="form-group"><label>案由 <span class="en">Cause of Action</span></label><input type="text" id="caseType" value="民间借贷纠纷" placeholder="如：民间借贷纠纷"></div>
 <div class="form-group"><label>审级/程序 <span class="en">Stage</span></label><select id="stage" onchange="updateStageDisplay()"><option value="一审" selected>一审</option><option value="二审">二审</option><option value="执行">执行</option><option value="再审">再审</option></select></div>
+<div class="form-group"><label>甲方诉讼地位 <span class="en">Client Position</span></label><select id="clientPosition"><option value="原告" selected>原告</option><option value="被告">被告</option><option value="第三人">第三人</option></select></div>
 <div class="form-group"><label>标的额（元）<span class="en">Amount</span></label><input type="text" id="amount" value="1570000" placeholder="如：1570000"></div>
 <div class="form-group"><label>管辖法院 <span class="en">Court</span></label><input type="text" id="court" placeholder="如：深圳市福田区人民法院"></div>
 <div class="form-group full"><label>案号 <span class="en">Case No.</span></label><input type="text" id="caseNo" placeholder="如：(2026)粤0304民初1234号"></div>
@@ -426,6 +427,7 @@ async function doGenerate() {
   const caseData = {
     caseType: document.getElementById('caseType').value.trim(),
     stage: document.getElementById('stage').value,
+    clientPosition: document.getElementById('clientPosition').value,
     amount: document.getElementById('amount').value.trim(),
     court: document.getElementById('court').value.trim() || '____________人民法院',
     caseNo: document.getElementById('caseNo').value.trim() || '____________号',
@@ -538,6 +540,8 @@ async function doGenerate() {
         // 替换模板中的硬编码示例名称
         ['与刘国强、路洋', '与' + opponentInfoStr],
         ['刘国强、路洋', opponentInfoStr],
+        // 诉讼地位
+        ['{{甲方诉讼地位}}', caseData.clientPosition],
       ],
       authOption: null 
     },
@@ -558,6 +562,8 @@ async function doGenerate() {
         ['{{审级}}程序', stageName],
         ['{{审级}}', caseData.stage],
         ['{{期限选项}}', caseData.authOption],
+        // 诉讼地位
+        ['{{甲方诉讼地位}}', caseData.clientPosition],
       ],
       authOption: caseData.authOption 
     },
@@ -578,6 +584,8 @@ async function doGenerate() {
         // 替换模板中的硬编码示例
         ['刘国强、路洋', opponentInfoStr],
         ['民间借贷纠纷', caseData.caseType],
+        // 诉讼地位
+        ['{{甲方诉讼地位}}', caseData.clientPosition],
       ],
       authOption: null 
     },
@@ -596,6 +604,8 @@ async function doGenerate() {
         ['{{催收人}}', caseData.collectorName || '____'],
         ['{{对方联系人}}', caseData.opponentContact || opponentInfoStr],
         ['{{律师费}}', caseData.feeFixed || '____'],
+        // 诉讼地位
+        ['{{甲方诉讼地位}}', caseData.clientPosition],
         // 兼容旧模板
         ['路洋', opponentInfoStr],
       ],
