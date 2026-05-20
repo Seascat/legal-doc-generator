@@ -364,18 +364,6 @@ const FIRM = {
 };
 
 // ═══════════════════════════════════════════
-// XML 替换引擎
-// ═══════════════════════════════════════════
-function replaceXmlString(xml, replacements) {
-  for (const [oldStr, newStr] of replacements) {
-    if (xml.includes(oldStr)) {
-      xml = xml.replaceAll(oldStr, newStr);
-    }
-  }
-  return xml;
-}
-
-// ═══════════════════════════════════════════
 // 生成单份文书
 // ═══════════════════════════════════════════
 async function generateOne(templateUrl, replacements, authOpt, filename) {
@@ -385,8 +373,6 @@ async function generateOne(templateUrl, replacements, authOpt, filename) {
 
   const zip = await JSZip.loadAsync(blob);
   let xml = await zip.file('word/document.xml').async('string');
-
-  xml = replaceXmlString(xml, replacements);
 
   // 授权书特殊处理: C → authOpt
   if (authOpt && authOpt !== 'C') {
@@ -545,10 +531,13 @@ async function doGenerate() {
         ['{{对方身份证号}}', opponent.isPerson ? opponent.idCard : opponent.creditCode || ''],
         ['{{对方公司代码}}', opponent.isCompany ? opponent.creditCode : ''],
         ['{{对方公司法人}}', opponent.isCompany ? opponent.legalRep : ''],
-        // 兼容旧模板
+        // 兼容旧模板 - 替换硬编码示例
         ['{{对方当事人列表}}', opponentInfoStr],
         ['执行程序', stageName],
         ['{{实际回款金额}}', caseData.amount],
+        // 替换模板中的硬编码示例名称
+        ['与刘国强、路洋', '与' + opponentInfoStr],
+        ['刘国强、路洋', opponentInfoStr],
       ],
       authOption: null 
     },
