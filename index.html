@@ -186,6 +186,19 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 </div>
 </div>
 
+<!-- 证据信息（用于证据目录） -->
+<div class="card">
+<div class="card-title"><span class="icon">📁</span> 证据信息 / Evidence Info <span style="font-size:11px;color:#666">（用于生成证据目录）</span></div>
+<div class="form-grid">
+<div class="form-group"><label>借款日期 <span class="en">Loan Date</span></label><input type="text" id="loanDate" placeholder="如：2024年1月15日"></div>
+<div class="form-group"><label>还款日期 <span class="en">Repayment Date</span></label><input type="text" id="repaymentDate" placeholder="如：2024年7月15日"></div>
+<div class="form-group"><label>已还金额（元）<span class="en">Repaid Amount</span></label><input type="text" id="repaidAmount" value="0" placeholder="如：50000"></div>
+<div class="form-group"><label>未还金额（元）<span class="en">Unpaid Amount</span></label><input type="text" id="unpaidAmount" placeholder="自动计算或手动填写"></div>
+<div class="form-group"><label>催收人姓名 <span class="en">Collector Name</span></label><input type="text" id="collectorName" placeholder="如：王五（受委托人）"></div>
+<div class="form-group"><label>对方联系人 <span class="en">Contact Person</span></label><input type="text" id="opponentContact" placeholder="如：李四"></div>
+</div>
+</div>
+
 <!-- 代理权限 -->
 <div class="card">
 <div class="card-title"><span class="icon">📋</span> 代理权限 / Authorization</div>
@@ -434,6 +447,13 @@ async function doGenerate() {
     feeFixed: document.getElementById('feeFixed').value.trim(),
     feeRisk: document.getElementById('feeRisk').value.trim(),
     authOption: document.getElementById('authOption').value,
+    // 证据信息
+    loanDate: document.getElementById('loanDate')?.value?.trim() || '',
+    repaymentDate: document.getElementById('repaymentDate')?.value?.trim() || '',
+    repaidAmount: document.getElementById('repaidAmount')?.value?.trim() || '0',
+    unpaidAmount: document.getElementById('unpaidAmount')?.value?.trim() || '',
+    collectorName: document.getElementById('collectorName')?.value?.trim() || '',
+    opponentContact: document.getElementById('opponentContact')?.value?.trim() || '',
   };
 
   // 验证
@@ -541,14 +561,14 @@ async function doGenerate() {
         ['{{甲方公司名称}}', client.isCompany ? client.companyName : ''],
         ['{{甲方公司代码}}', client.isCompany ? client.creditCode : ''],
         ['{{甲方法定代表人}}', client.isCompany ? client.legalRep : ''],
-        ['{{甲方出生日期}}', client.birth || ''],
+        ['{{甲方出生日期}}', client.birth || '____年__月__日'],
         ['{{甲方住址}}', client.address || ''],
         ['{{甲方联系电话}}', client.phone || ''],
         ['{{对方当事人}}', opponentInfoStr],
         ['{{案由}}', caseData.caseType],
         ['{{审级}}程序', stageName],
         ['{{审级}}', caseData.stage],
-        ['{{期限选项}}', 'A'],
+        ['{{期限选项}}', caseData.authOption],
       ],
       authOption: caseData.authOption 
     },
@@ -566,6 +586,8 @@ async function doGenerate() {
         ['{{管辖法院}}', caseData.court],
         ['{{律师电话}}', FIRM.lawyerPhone],
         ['{{对方当事人列表}}', opponentInfoStr],
+        // 替换模板中的硬编码示例
+        ['刘国强、路洋', opponentInfoStr],
         ['民间借贷纠纷', caseData.caseType],
       ],
       authOption: null 
@@ -577,6 +599,15 @@ async function doGenerate() {
       reps: [
         ['{{甲方姓名}}', client.isPerson ? client.name : client.companyName],
         ['{{对方当事人}}', opponentInfoStr],
+        ['{{标的额}}', caseData.amount],
+        ['{{借款日期}}', caseData.loanDate || '____年__月__日'],
+        ['{{还款日期}}', caseData.repaymentDate || '____年__月__日'],
+        ['{{已还金额}}', caseData.repaidAmount || '0'],
+        ['{{未还金额}}', caseData.unpaidAmount || caseData.amount],
+        ['{{催收人}}', caseData.collectorName || '____'],
+        ['{{对方联系人}}', caseData.opponentContact || opponentInfoStr],
+        ['{{律师费}}', caseData.feeFixed || '____'],
+        // 兼容旧模板
         ['路洋', opponentInfoStr],
       ],
       authOption: null 
