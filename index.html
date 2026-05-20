@@ -98,7 +98,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <!-- 甲方 - 自然人字段 -->
 <div class="party-fields active" id="fields-client-person">
 <div class="form-grid">
-<div class="form-group"><label>姓名 <span class="en">Name</span></label><input type="text" id="clientName" placeholder="如：吴锁春"></div>
+<div class="form-group"><label>姓名 <span class="en">Name</span></label><input type="text" id="clientName" placeholder="如：张三"></div>
 <div class="form-group"><label>性别 <span class="en">Gender</span></label><select id="clientGender"><option value="男" selected>男</option><option value="女">女</option></select></div>
 <div class="form-group"><label>民族 <span class="en">Ethnicity</span></label><input type="text" id="clientEthnicity" value="汉族" placeholder="如：汉族"></div>
 <div class="form-group"><label>出生日期 <span class="en">D.O.B</span></label><input type="text" id="clientBirth" placeholder="如：1985年3月15日"></div>
@@ -113,7 +113,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="form-grid">
 <div class="form-group full"><label>公司名称 <span class="en">Company Name</span></label><input type="text" id="clientCompanyName" placeholder="如：深圳某某科技有限公司"></div>
 <div class="form-group full"><label>统一社会信用代码 <span class="en">Credit Code</span></label><input type="text" id="clientCreditCode" placeholder="如：91440300XXXXXXXXXX"></div>
-<div class="form-group full"><label>法定代表人 <span class="en">Legal Representative</span></label><input type="text" id="clientLegalRep" placeholder="如：张三"></div>
+<div class="form-group full"><label>法定代表人 <span class="en">Legal Representative</span></label><input type="text" id="clientLegalRep" placeholder="如：王五（法定代表人姓名）"></div>
 <div class="form-group full"><label>公司地址 <span class="en">Company Address</span></label><input type="text" id="clientCompanyAddress" placeholder="公司注册地址或主要经营地址"></div>
 <div class="form-group full"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="clientCompanyPhone" placeholder="公司联系电话"></div>
 </div>
@@ -133,7 +133,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <!-- 对方 - 自然人字段 -->
 <div class="party-fields active" id="fields-opponent-person">
 <div class="form-grid">
-<div class="form-group full"><label>姓名 <span class="en">Name</span></label><input type="text" id="opponentName" value="刘国强" placeholder="如：刘国强"></div>
+<div class="form-group full"><label>姓名 <span class="en">Name</span></label><input type="text" id="opponentName" value="李四" placeholder="如：李四"></div>
 <div class="form-group"><label>性别 <span class="en">Gender</span></label><select id="opponentGender"><option value="男" selected>男</option><option value="女">女</option></select></div>
 <div class="form-group"><label>民族 <span class="en">Ethnicity</span></label><input type="text" id="opponentEthnicity" value="汉族" placeholder="如：汉族"></div>
 <div class="form-group"><label>出生日期 <span class="en">D.O.B</span></label><input type="text" id="opponentBirth" placeholder="如：1980年5月20日"></div>
@@ -148,7 +148,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="form-grid">
 <div class="form-group full"><label>公司名称 <span class="en">Company Name</span></label><input type="text" id="opponentCompanyName" placeholder="如：北京某某商贸有限公司"></div>
 <div class="form-group full"><label>统一社会信用代码 <span class="en">Credit Code</span></label><input type="text" id="opponentCreditCode" placeholder="如：91110108XXXXXXXXXX"></div>
-<div class="form-group full"><label>法定代表人 <span class="en">Legal Representative</span></label><input type="text" id="opponentLegalRep" placeholder="如：李四"></div>
+<div class="form-group full"><label>法定代表人 <span class="en">Legal Representative</span></label><input type="text" id="opponentLegalRep" placeholder="如：赵六（法定代表人姓名）"></div>
 <div class="form-group full"><label>公司地址 <span class="en">Company Address</span></label><input type="text" id="opponentCompanyAddress" placeholder="公司注册地址或主要经营地址"></div>
 <div class="form-group full"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="opponentCompanyPhone" placeholder="公司联系电话"></div>
 </div>
@@ -158,7 +158,7 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="party-fields" id="fields-opponent-mixed">
 <div class="form-group full" style="margin-bottom:12px;">
 <label>对方当事人列表（多个用顿号、分隔）<span class="en">Defendant Names</span></label>
-<input type="text" id="opponentMixedNames" value="刘国强、路洋" placeholder="如：刘国强、路洋、某某公司">
+<input type="text" id="opponentMixedNames" value="李四、某某公司" placeholder="如：李四、某某公司、王五">
 </div>
 <div style="font-size:12px;color:var(--text-dim);padding:12px;background:rgba(255,255,255,0.03);border-radius:8px;">
 💡 <strong>提示：</strong>混合模式仅填写名称列表，详细信息请在生成后手动补充到文书中。
@@ -192,9 +192,9 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <div class="form-grid">
 <div class="form-group full"><label>委托书选项 <span class="en">Power of Attorney Option</span></label>
 <select id="authOption">
-<option value="A">A 一般代理（程序性权利）</option>
-<option value="B" selected>B 特别授权（含实体处分权）</option>
-<option value="C">C 执行阶段代理</option>
+<option value="A">A 一般代理</option>
+<option value="B" selected>B 特别授权</option>
+<option value="C">C 执行代理</option>
 <option value="D">D 其他约定</option>
 </select></div>
 </div>
@@ -526,7 +526,7 @@ async function doGenerate() {
         ['{{对方公司代码}}', opponent.isCompany ? opponent.creditCode : ''],
         ['{{对方公司法人}}', opponent.isCompany ? opponent.legalRep : ''],
         // 兼容旧模板
-        ['刘国强、路洋', opponentInfoStr],
+        ['{{对方当事人列表}}', opponentInfoStr],
         ['执行程序', stageName],
         ['{{实际回款金额}}', caseData.amount],
       ],
@@ -565,7 +565,7 @@ async function doGenerate() {
         ['{{审级}}', caseData.stage],
         ['{{管辖法院}}', caseData.court],
         ['{{律师电话}}', FIRM.lawyerPhone],
-        ['刘国强、路洋', opponentInfoStr],
+        ['{{对方当事人列表}}', opponentInfoStr],
         ['民间借贷纠纷', caseData.caseType],
       ],
       authOption: null 
