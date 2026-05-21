@@ -487,16 +487,15 @@ async function doGenerate() {
   };
   const stageName = stageMap[caseData.stage] || caseData.stage + '程序';
 
-  // 计算律师费条款 - 合同第六条
-  let feeClauseNew = '';
-  const feeClauseOld = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案执行程序采取风险代理的收费方式，律师服务费为{{实际回款金额}}的3%收取。甲方应在收到实际执行回款后7日内将律师费全额一次性付给乙方。';
+  // 计算律师费条款 - 合同第六条（替换 {{律师费条款全文}}）
+  let feeClauseText = '';
 
   if (caseData.feeType === 'fixed') {
-    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取固定收费方式。律师服务费总额为人民币' + (caseData.feeFixed || '______') + '元收取。';
+    feeClauseText = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取固定收费方式。律师服务费总额为人民币' + (caseData.feeFixed || '______') + '元收取。';
   } else if (caseData.feeType === 'risk') {
-    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取风险代理收费方式。律师服务费按甲方实际收到执行回款金额的' + (caseData.feeRisk || '______%') + '收取。';
+    feeClauseText = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取风险代理收费方式。律师服务费按甲方实际收到执行回款金额的' + (caseData.feeRisk || '______%') + '收取。';
   } else {
-    feeClauseNew = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取‘固定收费+风险代理’相结合的方式。\n\n'
+    feeClauseText = '（一）根据《广东省物价局、司法厅律师服务收费管理实施办法》的规定，本案' + stageName + '采取‘固定收费+风险代理’相结合的方式。\n\n'
       + '固定部分：甲方应于本协议签订之日向乙方支付基础律师费人民币' + (caseData.feeFixed || '______') + '元。该费用为固定费用，无论案件结果如何，均不予退还。\n\n'
       + '风险部分：甲方应按其实际收到执行回款金额的' + (caseData.feeRisk || '______%（建议填写小于3%的比例，如1%-2%）') + '向乙方支付风险代理律师费。甲方应在收到实际执行回款后7日内将律师费全额一次性付给乙方。';
   }
@@ -528,8 +527,8 @@ async function doGenerate() {
       tmpl: TEMPLATES.contract, 
       name: `1. 民事委托代理合同-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
-        // 费用条款
-        [feeClauseOld, feeClauseNew],
+        // 费用条款（第六条第(一)款全文）
+        ['{{律师费条款全文}}', feeClauseText],
         // 当事方信息 - 精确匹配模板占位符
         ['{{甲方姓名}}', client.isPerson ? client.name : client.companyName],
         ['{{对方当事人}}', opponentInfoStr],
@@ -537,7 +536,6 @@ async function doGenerate() {
         ['{{标的额}}', caseData.amount],
         ['{{审级}}', caseData.stage],
         ['{{管辖法院}}', caseData.court],
-        ['{{实际回款金额}}', caseData.amount],
         ['{{甲方诉讼地位}}', caseData.clientPosition],
       ],
       authOption: null 
