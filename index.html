@@ -451,22 +451,24 @@ async function generateExcel(templateUrl, replacements, filename) {
   // Process each sheet
   for (const sheetName of wb.SheetNames) {
     const ws = wb.Sheets[sheetName];
+    if (!ws || !ws['!ref']) continue;
     // Convert to JSON and replace placeholders
     const range = XLSX.utils.decode_range(ws['!ref']);
     for (let row = range.s.r; row <= range.e.r; row++) {
       for (let col = range.s.c; col <= range.e.c; col++) {
         const cellAddr = XLSX.utils.encode_cell({r: row, c: col});
         const cell = ws[cellAddr];
-        if (cell && cell.t === 's' || (typeof cell.v === 'string')) {
-          let val = cell.v;
-          if (typeof val === 'string') {
-            for (const [oldStr, newStr] of replacements) {
-              if (val.includes(oldStr)) {
-                val = val.replaceAll(oldStr, newStr || '');
-              }
+        // Skip undefined cells and non-string cells
+        if (!cell) continue;
+        if (cell.t !== 's' && typeof cell.v !== 'string') continue;
+        let val = cell.v;
+        if (typeof val === 'string') {
+          for (const [oldStr, newStr] of replacements) {
+            if (val.includes(oldStr)) {
+              val = val.replaceAll(oldStr, newStr || '');
             }
-            cell.v = val;
           }
+          cell.v = val;
         }
       }
     }
