@@ -347,6 +347,20 @@ function getPartyInfo(party) {
 }
 
 // ═══════════════════════════════════════════
+// 生成委托人信息文本（根据类型）
+// ═══════════════════════════════════════════
+function getPrincipalText(client) {
+  if (client.isPerson) {
+    return '委托人：' + client.name + '，' + (client.gender || '男') + '，' + (client.ethnicity || '汉族') + '，' + (client.birth || '____年__月__日') + '出生。\n地址：' + (client.address || '');
+  } else if (client.isCompany) {
+    return '委托人：' + client.companyName + '\n统一社会信用代码：' + (client.creditCode || '____________') + '\n法定代表人：' + (client.legalRep || '____') + '\n地址：' + (client.companyAddress || '');
+  } else if (client.isMixed) {
+    return '委托人：' + (client.mixedNames || '');
+  }
+  return '委托人：' + (client.name || '');
+}
+
+// ═══════════════════════════════════════════
 // 模板文件名映射
 // ═══════════════════════════════════════════
 const TEMPLATES = {
@@ -545,11 +559,7 @@ async function doGenerate() {
       tmpl: TEMPLATES.auth, 
       name: `2. 授权委托书-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
-        ['{{甲方姓名}}', client.isPerson ? client.name : client.legalRep],
-        ['{{甲方性别}}', client.gender || '男'],
-        ['{{甲方民族}}', client.ethnicity || '汉族'],
-        ['{{甲方出生日期}}', client.birth || '____年__月__日'],
-        ['{{甲方住址}}', client.address || ''],
+        ['{{委托人信息}}', getPrincipalText(client)],
         ['{{甲方联系电话}}', client.phone || ''],
         ['{{对方当事人}}', opponentInfoStr],
         ['{{案由}}', caseData.caseType],
