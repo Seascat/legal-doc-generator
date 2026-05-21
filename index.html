@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZLC 法律文书自动生成系统</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--gold:#c9a962;--gold-light:#e0c87c;--red:#8b1a2b;--red-dark:#5c0f1c;--bg:#0d0d0d;--card:rgba(255,255,255,0.04);--card-border:rgba(201,169,98,0.15);--text:#e8e0d0;--text-dim:#999;--input-bg:rgba(255,255,255,0.06);--input-border:rgba(201,169,98,0.2)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -384,7 +385,7 @@ const TEMPLATES = {
   auth: 'templates/2-auth-letter.docx',
   letter: 'templates/3-law-firm-letter.docx',
   evidence: 'templates/4-evidence-list.docx',
-  approval: 'templates/5-case-approval.docx',
+  approval: 'templates/5-case-approval.xlsx',
 };
 
 // 律所固定信息
@@ -440,6 +441,54 @@ async function generateOne(templateUrl, replacements, authOpt, filename) {
     compression: 'DEFLATE',
   });
 
+  const url = URL.createObjectURL(newBlob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ═══════════════════════════════════════════
+// 生成 Excel 文件
+// ═══════════════════════════════════════════
+async function generateExcel(templateUrl, replacements, filename) {
+  const resp = await fetch(templateUrl);
+  if (!resp.ok) throw new Error('模板加载失败: ' + templateUrl);
+  const blob = await resp.blob();
+  
+  // Use SheetJS to load the workbook
+  const data = await blob.arrayBuffer();
+  const wb = XLSX.read(data, {type: 'array'});
+  
+  // Process each sheet
+  for (const sheetName of wb.SheetNames) {
+    const ws = wb.Sheets[sheetName];
+    // Convert to JSON and replace placeholders
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    for (let row = range.s.r; row <= range.e.r; row++) {
+      for (let col = range.s.c; col <= range.e.c; col++) {
+        const cellAddr = XLSX.utils.encode_cell({r: row, c: col});
+        const cell = ws[cellAddr];
+        if (cell && cell.t === 's' || (typeof cell.v === 'string')) {
+          let val = cell.v;
+          if (typeof val === 'string') {
+            for (const [oldStr, newStr] of replacements) {
+              if (val.includes(oldStr)) {
+                val = val.replaceAll(oldStr, newStr || '');
+              }
+            }
+            cell.v = val;
+          }
+        }
+      }
+    }
+  }
+  
+  // Generate output
+  const outData = XLSX.write(wb, {type: 'array', bookType: 'xlsx'});
+  const newBlob = new Blob([outData], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  
   const url = URL.createObjectURL(newBlob);
   const a = document.createElement('a');
   a.href = url;
@@ -635,7 +684,8 @@ async function doGenerate() {
 
     { 
       tmpl: TEMPLATES.approval, 
-      name: `5. 收案呈批表-${clientShortName}-${caseData.caseType}.docx`,
+      name: `5. 收案呈批表-${clientShortName}-${caseData.caseType}.xlsx`,
+      isExcel: true,
       reps: [
         ['{{案件编号}}', caseData.caseApprovalNo],
         ['{{委托人类型}}', caseData.clientTypeApproval],
@@ -669,7 +719,11 @@ async function doGenerate() {
       resultContent.innerHTML = `<div style="text-align:center;color:var(--text-dim);padding:20px;">${steps[i].label}</div>`;
       progressFill.style.width = steps[i].pct + '%';
 
-      await generateOne(files[i].tmpl, files[i].reps, files[i].authOption, files[i].name);
+      if (files[i].isExcel) {
+        await generateExcel(files[i].tmpl, files[i].reps, files[i].name);
+      } else {
+        await generateOne(files[i].tmpl, files[i].reps, files[i].authOption, files[i].name);
+      }
 
       await new Promise(r => setTimeout(r, 300));
     }
@@ -682,7 +736,7 @@ async function doGenerate() {
         2. 授权委托书-${clientShortName}-${caseData.caseType}.docx<br>
         3. 律师事务所函-${clientShortName}-${caseData.caseType}.docx<br>
         4. 证据目录-${clientShortName}-${caseData.caseType}.docx<br>
-        5. 收案呈批表-${clientShortName}-${caseData.caseType}.docx
+        5. 收案呈批表-${clientShortName}-${caseData.caseType}.xlsx
       </div>
       <div style="font-size:11px;color:#555;">
         ⚠️ 请检查下载文件夹。所有数据处理均在浏览器本地完成，未上传任何信息。<br>
