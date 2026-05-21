@@ -530,26 +530,14 @@ async function doGenerate() {
       reps: [
         // 费用条款
         [feeClauseOld, feeClauseNew],
-        // 当事方信息
+        // 当事方信息 - 精确匹配模板占位符
         ['{{甲方姓名}}', client.isPerson ? client.name : client.companyName],
         ['{{对方当事人}}', opponentInfoStr],
         ['{{案由}}', caseData.caseType],
         ['{{标的额}}', caseData.amount],
         ['{{审级}}', caseData.stage],
         ['{{管辖法院}}', caseData.court],
-        ['{{甲方身份证号}}', client.isPerson ? client.idCard : client.creditCode],
-        ['{{甲方法定代表人}}', client.isPerson ? client.name : client.legalRep],
-        ['{{对方身份证号}}', opponent.isPerson ? opponent.idCard : opponent.creditCode || ''],
-        ['{{对方公司代码}}', opponent.isCompany ? opponent.creditCode : ''],
-        ['{{对方公司法人}}', opponent.isCompany ? opponent.legalRep : ''],
-        // 兼容旧模板 - 替换硬编码示例
-        ['{{对方当事人列表}}', opponentInfoStr],
-        ['执行程序', stageName],
         ['{{实际回款金额}}', caseData.amount],
-        // 替换模板中的硬编码示例名称
-        ['与刘国强、路洋', '与' + opponentInfoStr],
-        ['刘国强、路洋', opponentInfoStr],
-        // 诉讼地位
         ['{{甲方诉讼地位}}', caseData.clientPosition],
       ],
       authOption: null 
@@ -560,9 +548,8 @@ async function doGenerate() {
       name: `2. 授权委托书-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
         ['{{甲方姓名}}', client.isPerson ? client.name : client.legalRep],
-        ['{{甲方公司名称}}', client.isCompany ? client.companyName : ''],
-        ['{{甲方公司代码}}', client.isCompany ? client.creditCode : ''],
-        ['{{甲方法定代表人}}', client.isCompany ? client.legalRep : ''],
+        ['{{甲方性别}}', client.gender || '男'],
+        ['{{甲方民族}}', client.ethnicity || '汉族'],
         ['{{甲方出生日期}}', client.birth || '____年__月__日'],
         ['{{甲方住址}}', client.address || ''],
         ['{{甲方联系电话}}', client.phone || ''],
@@ -571,7 +558,6 @@ async function doGenerate() {
         ['{{审级}}程序', stageName],
         ['{{审级}}', caseData.stage],
         ['{{期限选项}}', caseData.authOption],
-        // 诉讼地位
         ['{{甲方诉讼地位}}', caseData.clientPosition],
       ],
       authOption: caseData.authOption 
@@ -582,19 +568,13 @@ async function doGenerate() {
       name: `3. 律师事务所函-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
         ['{{甲方姓名}}', client.isPerson ? client.name : client.legalRep],
-        ['{{甲方公司名称}}', client.isCompany ? client.companyName : ''],
+        ['{{甲方诉讼地位}}', caseData.clientPosition],
         ['{{对方当事人}}', opponentInfoStr],
         ['{{案由}}', caseData.caseType],
         ['{{审级}}程序', stageName],
         ['{{审级}}', caseData.stage],
         ['{{管辖法院}}', caseData.court],
         ['{{律师电话}}', FIRM.lawyerPhone],
-        ['{{对方当事人列表}}', opponentInfoStr],
-        // 替换模板中的硬编码示例
-        ['刘国强、路洋', opponentInfoStr],
-        ['民间借贷纠纷', caseData.caseType],
-        // 诉讼地位
-        ['{{甲方诉讼地位}}', caseData.clientPosition],
       ],
       authOption: null 
     },
@@ -604,6 +584,7 @@ async function doGenerate() {
       name: `4. 证据目录-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
         ['{{甲方姓名}}', client.isPerson ? client.name : client.companyName],
+        ['{{甲方诉讼地位}}', caseData.clientPosition],
         ['{{对方当事人}}', opponentInfoStr],
         ['{{标的额}}', caseData.amount],
         ['{{借款日期}}', caseData.loanDate || '____年__月__日'],
@@ -613,10 +594,6 @@ async function doGenerate() {
         ['{{催收人}}', caseData.collectorName || '____'],
         ['{{对方联系人}}', caseData.opponentContact || opponentInfoStr],
         ['{{律师费}}', caseData.feeFixed || '____'],
-        // 诉讼地位
-        ['{{甲方诉讼地位}}', caseData.clientPosition],
-        // 兼容旧模板
-        ['路洋', opponentInfoStr],
       ],
       authOption: null 
     },
