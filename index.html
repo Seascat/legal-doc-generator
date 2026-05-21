@@ -42,6 +42,17 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 @keyframes fadeIn{from{opacity:0;transform:translateY(-5px)}to{opacity:1;transform:translateY(0)}}
 .section-divider{height:1px;background:rgba(201,169,98,0.1);margin:16px 0}
 .btn-area{text-align:center;padding:10px 0 30px}
+.btn-qcc{background:linear-gradient(135deg,#1a5276,#2980b9);color:#fff;border:1px solid rgba(41,128,185,0.3);padding:8px 16px;font-size:13px;font-family:inherit;border-radius:8px;cursor:pointer;white-space:nowrap;transition:all 0.3s}
+.btn-qcc:hover{background:linear-gradient(135deg,#2980b9,#3498db);box-shadow:0 2px 10px rgba(41,128,185,0.3)}
+.btn-qcc:disabled{opacity:0.5;cursor:wait}
+.qcc-result{display:none;margin-top:8px;padding:10px 14px;background:rgba(41,128,185,0.06);border:1px solid rgba(41,128,185,0.15);border-radius:8px;font-size:13px;grid-column:1/-1}
+.qcc-result.show{display:block}
+.qcc-result .item{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.05);cursor:pointer;transition:background 0.2s;border-radius:4px;padding:8px}
+.qcc-result .item:hover{background:rgba(41,128,185,0.1)}
+.qcc-result .item:last-child{border-bottom:none}
+.qcc-result .item-name{font-weight:bold;color:var(--gold)}
+.qcc-result .item-detail{font-size:11px;color:var(--text-dim);margin-top:2px}
+.qcc-result .loading{text-align:center;color:var(--text-dim);padding:12px}
 .btn-generate{background:linear-gradient(135deg,var(--red-dark),var(--red));color:var(--gold-light);border:1px solid rgba(201,169,98,0.3);padding:14px 48px;font-size:16px;font-family:inherit;letter-spacing:2px;border-radius:30px;cursor:pointer;transition:all 0.3s;position:relative;overflow:hidden}
 .btn-generate:hover{background:linear-gradient(135deg,var(--red),#a01e32);box-shadow:0 4px 20px rgba(139,26,43,0.3);transform:translateY(-1px)}
 .btn-generate:active{transform:translateY(0)}
@@ -112,11 +123,18 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <!-- 甲方 - 公司字段 -->
 <div class="party-fields" id="fields-client-company">
 <div class="form-grid">
-<div class="form-group full"><label>公司名称 <span class="en">Company Name</span></label><input type="text" id="clientCompanyName" placeholder="如：深圳某某科技有限公司"></div>
+<div class="form-group full">
+<label>公司名称 <span class="en">Company Name</span></label>
+<div style="display:flex;gap:8px;">
+<input type="text" id="clientCompanyName" placeholder="如：深圳某某科技有限公司" style="flex:1">
+<button type="button" class="btn-qcc" onclick="searchQCC('client')">🔍 查企业</button>
+</div>
+</div>
 <div class="form-group full"><label>统一社会信用代码 <span class="en">Credit Code</span></label><input type="text" id="clientCreditCode" placeholder="如：91440300XXXXXXXXXX"></div>
 <div class="form-group full"><label>法定代表人 <span class="en">Legal Representative</span></label><input type="text" id="clientLegalRep" placeholder="如：王五（法定代表人姓名）"></div>
 <div class="form-group full"><label>公司地址 <span class="en">Company Address</span></label><input type="text" id="clientCompanyAddress" placeholder="公司注册地址或主要经营地址"></div>
 <div class="form-group full"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="clientCompanyPhone" placeholder="公司联系电话"></div>
+<div id="qccResult-client" class="qcc-result"></div>
 </div>
 </div>
 </div>
@@ -147,11 +165,18 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 <!-- 对方 - 公司字段 -->
 <div class="party-fields" id="fields-opponent-company">
 <div class="form-grid">
-<div class="form-group full"><label>公司名称 <span class="en">Company Name</span></label><input type="text" id="opponentCompanyName" placeholder="如：北京某某商贸有限公司"></div>
+<div class="form-group full">
+<label>公司名称 <span class="en">Company Name</span></label>
+<div style="display:flex;gap:8px;">
+<input type="text" id="opponentCompanyName" placeholder="如：北京某某商贸有限公司" style="flex:1">
+<button type="button" class="btn-qcc" onclick="searchQCC('opponent')">🔍 查企业</button>
+</div>
+</div>
 <div class="form-group full"><label>统一社会信用代码 <span class="en">Credit Code</span></label><input type="text" id="opponentCreditCode" placeholder="如：91110108XXXXXXXXXX"></div>
 <div class="form-group full"><label>法定代表人 <span class="en">Legal Representative</span></label><input type="text" id="opponentLegalRep" placeholder="如：赵六（法定代表人姓名）"></div>
 <div class="form-group full"><label>公司地址 <span class="en">Company Address</span></label><input type="text" id="opponentCompanyAddress" placeholder="公司注册地址或主要经营地址"></div>
 <div class="form-group full"><label>联系电话 <span class="en">Phone</span></label><input type="text" id="opponentCompanyPhone" placeholder="公司联系电话"></div>
+<div id="qccResult-opponent" class="qcc-result"></div>
 </div>
 </div>
 
@@ -377,6 +402,87 @@ const FIRM = {
   lawyer: '黄海',
   lawyerPhone: '15013500786',
 };
+
+// ═══════════════════════════════════════════
+// 企查查企业信息查询
+// ═══════════════════════════════════════════
+const QCC_API = 'http://localhost:5678/api/search';
+
+async function searchQCC(party) {
+  const nameInput = document.getElementById(party + 'CompanyName');
+  const resultDiv = document.getElementById('qccResult-' + party);
+  const btn = resultDiv?.previousElementSibling?.querySelector('.btn-qcc') || document.querySelector(`[onclick="searchQCC('${party}')"]`);
+  
+  const name = nameInput?.value?.trim();
+  if (!name) {
+    alert('请先输入公司名称');
+    return;
+  }
+  
+  // Show loading
+  resultDiv.innerHTML = '<div class="loading">⏳ 正在查询企业信息...</div>';
+  resultDiv.classList.add('show');
+  if (btn) btn.disabled = true;
+  
+  try {
+    const resp = await fetch(QCC_API + '?name=' + encodeURIComponent(name), { signal: AbortSignal.timeout(15000) });
+    if (!resp.ok) throw new Error('查询失败');
+    const data = await resp.json();
+    
+    if (!data.companies || data.companies.length === 0) {
+      resultDiv.innerHTML = '<div class="loading" style="color:#ff5252;">❌ 未找到该企业信息</div>';
+      return;
+    }
+    
+    // Display results
+    let html = '<div style="font-size:11px;color:#888;margin-bottom:6px;">点击结果自动填入：</div>';
+    data.companies.forEach((c, idx) => {
+      html += `<div class="item" onclick="fillCompany('${party}', ${idx})">
+        <div class="item-name">${c.name}</div>
+        <div class="item-detail">${c.creditCode ? '信用代码：' + c.creditCode : ''}${c.legalRep ? ' | 法人：' + c.legalRep : ''}${c.address ? ' | ' + c.address : ''}</div>
+      </div>`;
+    });
+    
+    // Store data for filling
+    window['_qccData_' + party] = data.companies;
+    
+    html += '<div style="font-size:11px;color:#555;margin-top:6px;">数据来源：企查查</div>';
+    resultDiv.innerHTML = html;
+    resultDiv.classList.add('show');
+  } catch (e) {
+    resultDiv.innerHTML = `<div class="loading" style="color:#ff5252;">❌ 查询失败：${e.message}<br><span style="font-size:11px;">请确认已启动 qcc-api.py（<code>python qcc-api.py</code>）</span></div>`;
+  } finally {
+    if (btn) btn.disabled = false;
+  }
+}
+
+function fillCompany(party, idx) {
+  const companies = window['_qccData_' + party];
+  if (!companies || !companies[idx]) return;
+  
+  const c = companies[idx];
+  const results = document.getElementById('qccResult-' + party);
+  
+  // Fill the form fields
+  const nameInput = document.getElementById(party + 'CompanyName');
+  const codeInput = document.getElementById(party + 'CreditCode');
+  const repInput = document.getElementById(party + 'LegalRep');
+  const addrInput = document.getElementById(party + 'CompanyAddress');
+  
+  if (nameInput && c.name) { nameInput.value = c.name; nameInput.style.borderColor = '#4caf50'; }
+  if (codeInput && c.creditCode) { codeInput.value = c.creditCode; codeInput.style.borderColor = '#4caf50'; }
+  if (repInput && c.legalRep) { repInput.value = c.legalRep; repInput.style.borderColor = '#4caf50'; }
+  if (addrInput && c.address) { addrInput.value = c.address; addrInput.style.borderColor = '#4caf50'; }
+  
+  // Animate the fill
+  if (results) {
+    results.innerHTML = '<div class="loading" style="color:#4caf50;">✅ 已自动填入企业信息</div>';
+    setTimeout(() => { results.classList.remove('show'); }, 2000);
+  }
+  
+  // Also populate phone if available
+  // Note: qichacha usually doesn't return phone, so skip
+}
 
 // ═══════════════════════════════════════════
 // 生成单份文书
