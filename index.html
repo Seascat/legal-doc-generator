@@ -544,7 +544,7 @@ async function doGenerate() {
         // 费用条款（第六条第(一)款全文）
         ['{{律师费条款全文}}', feeClauseText],
         // 当事方信息 - 精确匹配模板占位符
-        ['{{甲方姓名}}', client.isPerson ? client.name : client.companyName],
+        ['{{甲方姓名}}', client.isPerson ? client.name : client.isCompany ? client.companyName : client.mixedNames || client.name],
         ['{{对方当事人}}', opponentInfoStr],
         ['{{案由}}', caseData.caseType],
         ['{{标的额}}', caseData.amount],
@@ -575,7 +575,7 @@ async function doGenerate() {
       tmpl: TEMPLATES.letter, 
       name: `3. 律师事务所函-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
-        ['{{甲方姓名}}', client.isPerson ? client.name : client.legalRep],
+        ['{{甲方姓名}}', client.isPerson ? client.name : client.isCompany ? client.companyName : client.mixedNames || client.name],
         ['{{甲方诉讼地位}}', caseData.clientPosition],
         ['{{对方当事人}}', opponentInfoStr],
         ['{{案由}}', caseData.caseType],
@@ -591,7 +591,7 @@ async function doGenerate() {
       tmpl: TEMPLATES.evidence, 
       name: `4. 证据目录-${clientShortName}-${caseData.caseType}.docx`,
       reps: [
-        ['{{甲方姓名}}', client.isPerson ? client.name : client.companyName],
+        ['{{甲方姓名}}', client.isPerson ? client.name : client.isCompany ? client.companyName : client.mixedNames || client.name],
         ['{{甲方诉讼地位}}', caseData.clientPosition],
         ['{{对方当事人}}', opponentInfoStr],
         ['{{标的额}}', caseData.amount],
