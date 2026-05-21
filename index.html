@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ZLC 法律文书自动生成系统</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 :root{--gold:#c9a962;--gold-light:#e0c87c;--red:#8b1a2b;--red-dark:#5c0f1c;--bg:#0d0d0d;--card:rgba(255,255,255,0.04);--card-border:rgba(201,169,98,0.15);--text:#e8e0d0;--text-dim:#999;--input-bg:rgba(255,255,255,0.06);--input-border:rgba(201,169,98,0.2)}
 *{margin:0;padding:0;box-sizing:border-box}
@@ -201,22 +200,6 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 </div>
 </div>
 
-<!-- 收案呈批 -->
-<div class="card">
-<div class="card-title"><span class="icon">📋</span> 收案呈批 / Case Approval <span style="font-size:11px;color:#666">（生成第5份文书）</span></div>
-<div class="form-grid">
-<div class="form-group"><label>案件编号 <span class="en">Case No.</span></label><input type="text" id="caseApprovalNo" placeholder="如：(2026)ZLF/HQ/C001"></div>
-<div class="form-group"><label>委托人类型 <span class="en">Client Type</span></label><select id="clientTypeApproval"><option value="个人" selected>个人</option><option value="单位">单位</option><option value="其他">其他</option></select></div>
-<div class="form-group"><label>对方当事人类型 <span class="en">Opponent Type</span></label><select id="opponentTypeApproval"><option value="个人" selected>个人</option><option value="单位">单位</option><option value="其他">其他</option></select></div>
-<div class="form-group full"><label>简要案情 <span class="en">Case Summary</span></label><textarea id="caseSummary" rows="3" placeholder="请简要描述案件事实..."></textarea></div>
-<div class="form-group"><label>律师收费总额（元）<span class="en">Total Fee</span></label><input type="text" id="totalFee" placeholder="如：24000"></div>
-<div class="form-group"><label>承办律师 <span class="en">Attorney</span></label><input type="text" id="attorneyName" value="黄海"></div>
-<div class="form-group"><label>案件冲突 <span class="en">Conflict Check</span></label><select id="caseConflict"><option value="无冲突" selected>无冲突</option><option value="有冲突">有冲突</option><option value="审查中">审查中</option></select></div>
-<div class="form-group"><label>案件类型 <span class="en">Case Category</span></label><input type="text" id="caseCategory" placeholder="如：诉讼/非诉"></div>
-<div class="form-group"><label>审批意见 <span class="en">Approval</span></label><input type="text" id="approvalOpinion" placeholder="如：同意承办"></div>
-</div>
-</div>
-
 <!-- 代理权限 -->
 <div class="card">
 <div class="card-title"><span class="icon">📋</span> 代理权限 / Authorization</div>
@@ -233,9 +216,9 @@ body{font-family:"Noto Serif SC","SimSun","宋体",serif;background:var(--bg);co
 
 <div class="btn-area">
 <button class="btn-generate" id="btnGenerate" onclick="doGenerate()">
-<span class="spinner" id="spinner"></span>生成五份文书 / Generate 5 Documents
+<span class="spinner" id="spinner"></span>生成四份文书 / Generate 4 Documents
 </button>
-<div style="margin-top:8px;font-size:11px;color:#555">民事委托代理合同 · 授权委托书 · 律师事务所函 · 证据目录 · 收案呈批表</div>
+<div style="margin-top:8px;font-size:11px;color:#555">民事委托代理合同 · 授权委托书 · 律师事务所函 · 证据目录</div>
 <div class="progress-bar" id="progressBar" style="display:none"><div class="progress-fill" id="progressFill"></div></div>
 </div>
 
@@ -385,7 +368,6 @@ const TEMPLATES = {
   auth: 'templates/2-auth-letter.docx',
   letter: 'templates/3-law-firm-letter.docx',
   evidence: 'templates/4-evidence-list.docx',
-  approval: 'templates/5-case-approval.xlsx',
 };
 
 // 律所固定信息
@@ -437,56 +419,6 @@ async function generateOne(templateUrl, replacements, authOpt, filename) {
 }
 
 // ═══════════════════════════════════════════
-// 生成 Excel 文件
-// ═══════════════════════════════════════════
-async function generateExcel(templateUrl, replacements, filename) {
-  const resp = await fetch(templateUrl);
-  if (!resp.ok) throw new Error('模板加载失败: ' + templateUrl);
-  const blob = await resp.blob();
-  
-  // Use SheetJS to load the workbook
-  const data = await blob.arrayBuffer();
-  const wb = XLSX.read(data, {type: 'array'});
-  
-  // Process each sheet
-  for (const sheetName of wb.SheetNames) {
-    const ws = wb.Sheets[sheetName];
-    if (!ws || !ws['!ref']) continue;
-    // Convert to JSON and replace placeholders
-    const range = XLSX.utils.decode_range(ws['!ref']);
-    for (let row = range.s.r; row <= range.e.r; row++) {
-      for (let col = range.s.c; col <= range.e.c; col++) {
-        const cellAddr = XLSX.utils.encode_cell({r: row, c: col});
-        const cell = ws[cellAddr];
-        // Skip undefined cells and non-string cells
-        if (!cell) continue;
-        if (cell.t !== 's' && typeof cell.v !== 'string') continue;
-        let val = cell.v;
-        if (typeof val === 'string') {
-          for (const [oldStr, newStr] of replacements) {
-            if (val.includes(oldStr)) {
-              val = val.replaceAll(oldStr, newStr || '');
-            }
-          }
-          cell.v = val;
-        }
-      }
-    }
-  }
-  
-  // Generate output
-  const outData = XLSX.write(wb, {type: 'array', bookType: 'xlsx'});
-  const newBlob = new Blob([outData], {type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
-  
-  const url = URL.createObjectURL(newBlob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = filename;
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-// ═══════════════════════════════════════════
 // 主流程
 // ═══════════════════════════════════════════
 async function doGenerate() {
@@ -513,16 +445,6 @@ async function doGenerate() {
     feeFixed: document.getElementById('feeFixed').value.trim(),
     feeRisk: document.getElementById('feeRisk').value.trim(),
     authOption: document.getElementById('authOption').value,
-    // 收案呈批
-    caseApprovalNo: document.getElementById('caseApprovalNo')?.value?.trim() || '______第____号',
-    clientTypeApproval: document.getElementById('clientTypeApproval')?.value || '个人',
-    opponentTypeApproval: document.getElementById('opponentTypeApproval')?.value || '个人',
-    caseSummary: document.getElementById('caseSummary')?.value?.trim() || '',
-    totalFee: document.getElementById('totalFee')?.value?.trim() || '0',
-    attorneyName: document.getElementById('attorneyName')?.value?.trim() || '黄海',
-    caseConflict: document.getElementById('caseConflict')?.value || '无冲突',
-    caseCategory: document.getElementById('caseCategory')?.value?.trim() || '',
-    approvalOpinion: document.getElementById('approvalOpinion')?.value?.trim() || '',
     // 证据信息
     loanDate: document.getElementById('loanDate')?.value?.trim() || '',
     repaymentDate: document.getElementById('repaymentDate')?.value?.trim() || '',
@@ -670,62 +592,33 @@ async function doGenerate() {
       ],
       authOption: null 
     },
-
-    { 
-      tmpl: TEMPLATES.approval, 
-      name: `5. 收案呈批表-${clientShortName}-${caseData.caseType}.xlsx`,
-      isExcel: true,
-      reps: [
-        ['{{案件编号}}', caseData.caseApprovalNo],
-        ['{{委托人类型}}', caseData.clientTypeApproval],
-        ['{{对方当事人类型}}', caseData.opponentTypeApproval],
-        ['{{甲方姓名}}', client.isPerson ? client.name : client.isCompany ? client.companyName : client.mixedNames || client.name],
-        ['{{甲方联系电话}}', client.phone || ''],
-        ['{{对方当事人}}', opponentInfoStr],
-        ['{{简要案情}}', caseData.caseSummary || '详见委托代理合同'],
-        ['{{标的额}}', caseData.amount],
-        ['{{律师费总额}}', caseData.totalFee || caseData.feeFixed],
-        ['{{承办律师}}', caseData.attorneyName || FIRM.lawyer],
-        ['{{案件冲突}}', caseData.caseConflict],
-        ['{{案件类型}}', caseData.caseCategory || '民商事诉讼'],
-        ['{{审批意见}}', caseData.approvalOpinion || '_______'],
-        ['{{审批日期}}', '____年__月__日'],
-      ],
-      authOption: null 
-    },
   ];
 
   try {
     const steps = [
-      { label: '生成委托代理合同...', pct: 5 },
-      { label: '生成授权委托书...', pct: 25 },
-      { label: '生成律师事务所函...', pct: 45 },
-      { label: '生成证据目录...', pct: 65 },
-      { label: '生成收案呈批表...', pct: 85 },
+      { label: '生成委托代理合同...', pct: 10 },
+      { label: '生成授权委托书...', pct: 35 },
+      { label: '生成律师事务所函...', pct: 60 },
+      { label: '生成证据目录...', pct: 85 },
     ];
 
     for (let i = 0; i < files.length; i++) {
       resultContent.innerHTML = `<div style="text-align:center;color:var(--text-dim);padding:20px;">${steps[i].label}</div>`;
       progressFill.style.width = steps[i].pct + '%';
 
-      if (files[i].isExcel) {
-        await generateExcel(files[i].tmpl, files[i].reps, files[i].name);
-      } else {
-        await generateOne(files[i].tmpl, files[i].reps, files[i].authOption, files[i].name);
-      }
+      await generateOne(files[i].tmpl, files[i].reps, files[i].authOption, files[i].name);
 
       await new Promise(r => setTimeout(r, 300));
     }
 
     progressFill.style.width = '100%';
     resultContent.innerHTML = `<div style="text-align:center;padding:20px;">
-      <div style="font-weight:bold;color:var(--gold);margin-bottom:12px;font-size:18px;">✅ 生成完成！5 份文书已自动下载</div>
+      <div style="font-weight:bold;color:var(--gold);margin-bottom:12px;font-size:18px;">✅ 生成完成！4 份文书已自动下载</div>
       <div style="font-size:13px;color:var(--text-dim);margin-bottom:12px;">
         1. 民事委托代理合同-${clientShortName}-${caseData.caseType}.docx<br>
         2. 授权委托书-${clientShortName}-${caseData.caseType}.docx<br>
         3. 律师事务所函-${clientShortName}-${caseData.caseType}.docx<br>
-        4. 证据目录-${clientShortName}-${caseData.caseType}.docx<br>
-        5. 收案呈批表-${clientShortName}-${caseData.caseType}.xlsx
+        4. 证据目录-${clientShortName}-${caseData.caseType}.docx
       </div>
       <div style="font-size:11px;color:#555;">
         ⚠️ 请检查下载文件夹。所有数据处理均在浏览器本地完成，未上传任何信息。<br>
