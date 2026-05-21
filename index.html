@@ -416,22 +416,9 @@ async function generateOne(templateUrl, replacements, authOpt, filename) {
     xml = xml.replace(regex, newStr || '');
   }
 
-  // 授权书特殊处理: C → authOpt
+  // 代理权限选项：授权书中唯一独立的<w:t>C</w:t>就是权限选项
   if (authOpt && authOpt !== 'C') {
-    const re = /第[^<]*(?:<[^>]*>)*\s*<w:t[^>]*>\s*C\s*<\/w:t>\s*(?:<[^>]*>)*\s*项/;
-    if (re.test(xml)) {
-      xml = xml.replace(
-        /(<w:t[^>]*>)\s*C\s*(<\/w:t>)/,
-        function(match, open, close, offset) {
-          const before = xml.substring(Math.max(0, offset - 80), offset);
-          const after = xml.substring(offset + match.length, offset + match.length + 20);
-          if (before.includes('第') && after.includes('项')) {
-            return open + authOpt + close;
-          }
-          return match;
-        }
-      );
-    }
+    xml = xml.replace('<w:t>C</w:t>', '<w:t>' + authOpt + '</w:t>');
   }
 
   zip.file('word/document.xml', xml);
