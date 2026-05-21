@@ -406,7 +406,7 @@ const FIRM = {
 // ═══════════════════════════════════════════
 // 企查查企业信息查询
 // ═══════════════════════════════════════════
-const QCC_API = 'http://localhost:5678/api/search';
+const QCC_PORTS = [5681, 5680, 5679, 5678];  // 优先新端口
 
 async function searchQCC(party) {
   const nameInput = document.getElementById(party + 'CompanyName');
@@ -424,36 +424,45 @@ async function searchQCC(party) {
   resultDiv.classList.add('show');
   if (btn) btn.disabled = true;
   
-  try {
-    const resp = await fetch(QCC_API + '?name=' + encodeURIComponent(name), { signal: AbortSignal.timeout(15000) });
-    if (!resp.ok) throw new Error('查询失败');
-    const data = await resp.json();
-    
-    if (!data.companies || data.companies.length === 0) {
-      resultDiv.innerHTML = '<div class="loading" style="color:#ff5252;">❌ 未找到该企业信息</div>';
-      return;
+  // Try each port
+  let lastError = '';
+  for (const port of QCC_PORTS) {
+    try {
+      const resp = await fetch(`http://localhost:${port}/api/search?name=` + encodeURIComponent(name), 
+        { signal: AbortSignal.timeout(10000) });
+      if (!resp.ok) throw new Error('HTTP ' + resp.status);
+      const data = await resp.json();
+      
+      if (!data.companies || data.companies.length === 0) {
+        resultDiv.innerHTML = '<div class="loading" style="color:#ff9800;">😕 未找到该企业信息<br><span style="font-size:11px;">可尝试使用更精确的公司全称</span></div>';
+        return;
+      }
+      
+      // Display results
+      let html = '<div style="font-size:11px;color:#888;margin-bottom:6px;">✅ 点击结果自动填入表单：</div>';
+      data.companies.forEach((c, idx) => {
+        html += `<div class="item" onclick="fillCompany('${party}', ${idx})">
+          <div class="item-name">${c.name || '(名称未获取)'}</div>
+          <div class="item-detail">${c.creditCode ? '信用代码：' + c.creditCode : ''}${c.legalRep ? ' · 法人：' + c.legalRep : ''}${c.address ? ' · ' + c.address.substring(0,40) : ''}</div>
+        </div>`;
+      });
+      
+      window['_qccData_' + party] = data.companies;
+      html += '<div style="font-size:11px;color:#555;margin-top:6px;">数据来源：' + (data.source || '网络搜索') + '</div>';
+      resultDiv.innerHTML = html;
+      resultDiv.classList.add('show');
+      return;  // Success
+    } catch (e) {
+      lastError = e.message;
+      continue;  // Try next port
     }
-    
-    // Display results
-    let html = '<div style="font-size:11px;color:#888;margin-bottom:6px;">点击结果自动填入：</div>';
-    data.companies.forEach((c, idx) => {
-      html += `<div class="item" onclick="fillCompany('${party}', ${idx})">
-        <div class="item-name">${c.name}</div>
-        <div class="item-detail">${c.creditCode ? '信用代码：' + c.creditCode : ''}${c.legalRep ? ' | 法人：' + c.legalRep : ''}${c.address ? ' | ' + c.address : ''}</div>
-      </div>`;
-    });
-    
-    // Store data for filling
-    window['_qccData_' + party] = data.companies;
-    
-    html += '<div style="font-size:11px;color:#555;margin-top:6px;">数据来源：企查查</div>';
-    resultDiv.innerHTML = html;
-    resultDiv.classList.add('show');
-  } catch (e) {
-    resultDiv.innerHTML = `<div class="loading" style="color:#ff5252;">❌ 查询失败：${e.message}<br><span style="font-size:11px;">请确认已启动 qcc-api.py（<code>python qcc-api.py</code>）</span></div>`;
-  } finally {
-    if (btn) btn.disabled = false;
   }
+  
+  // All ports failed
+  resultDiv.innerHTML = `<div class="loading" style="color:#ff5252;">❌ 查询失败<br>
+    <span style="font-size:11px;">请先启动本地服务：<code>python qcc-api.py</code><br>
+    或在终端运行：<code>cd gh-pages && python qcc-api.py</code></span></div>`;
+  if (btn) btn.disabled = false;
 }
 
 function fillCompany(party, idx) {
